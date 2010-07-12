@@ -8,19 +8,61 @@
 <f:section name="content">
 
 	<script>
+<![CDATA[
 		// InputEx needs a correct path to this image
-		inputEx.spacerUrl = "../typo3conf/ext/extbase_kickstarter/Resources/Public/jsDomainModeling/wireit/lib/inputex/images/space.gif";
+		//inputEx.spacerUrl = "../typo3conf/ext/extbase_kickstarter/Resources/Public/jsDomainModeling/wireit/lib/inputex/images/space.gif";
 
-		YAHOO.util.Event.onDOMReady( function() {
+		/*YAHOO.util.Event.onDOMReady( function() {
 			var editor = new WireIt.WiringEditor(extbaseModeling_wiringEditorLanguage);
 			// editor.onHelp();
-		});
+		});*/
+		function onOryxResourcesLoaded(){
+			ORYX_LOGLEVEL = 5;
+			ORYX.CONFIG.ROOT_PATH = '/extdev-trunk/typo3conf/ext/extbase_kickstarter/Resources/Public/Oryx/';
+			ORYX.MashupAPI = {
+				loadablePlugins: [
+					'ORYX.Plugins.DragDropResize',
+					'ORYX.Plugins.JSONSupport',
+					'ORYX.Plugins.Undo',
+					'ORYX.Plugins.Arrangement',
+					'ORYX.Plugins.ShapeRepository',
+					'ORYX.Plugins.PluginLoader',
+					'ORYX.Plugins.Edit',
+					//'ORYX.Plugins.Toolbar',
+					'ORYX.Plugins.File',
+					'ORYX.Plugins.CanvasResize',
+					'ORYX.Plugins.HighlightingSelectedShapes',
+					'ORYX.Plugins.Grouping',
+					'ORYX.Plugins.File',
+					'ORYX.Plugins.Save',
+					'ORYX.Plugins.SSExtensionLoader',
+					'ORYX.Plugins.DragDocker',
+					'ORYX.Plugins.AddDocker',
+					'ORYX.Plugins.RDFExport',
+					'ORYX.Plugins.KeysMove',
+					'ORYX.Plugins.RowLayouting',
+					'ORYX.Plugins.ShapeHighlighting',
+					'ORYX.Plugins.SelectionFrame',
+					'ORYX.Plugins.ShapeMenuPlugin'
+				],
+			};
+			new ORYX.Editor({
+				fullscreen: false,
+				//id: Ext.get('tab-dm').getEl().id,
+				id: 'tab-dm',
+				stencilset: {
+					url: 'http://typo3-dev' + ORYX.CONFIG.ROOT_PATH + 'stencilsets/workflownets/workflownets.json'
+				}
+			});
+		}
+		]]>
 	</script>
 
 	<div id="domainModelEditor">
-		<div id="top">
+		If you can read this...<br />... somewhere something must have gone wrong...
+		<!--div id="top">
 			<div class="logo">Extbase Kickstarter</div>
-			<div class="topright"><!--  Username could go here... --></div>
+			<div class="topright"></div>
 		</div>
 
 		<div id="left">
@@ -50,6 +92,6 @@
 				<p>View <a href="http://www.infoq.com/presentations/model-to-work-evans" target="_new">Putting the Model to Work</a> and <a href="http://www.infoq.com/presentations/strategic-design-evans" target="_new">Strategic Design</a> by Eric Evans <br /> to get an introduction into Domain Driven Design (DDD).</p>
 				<br />
 			</div>
-		</div>
+		</div-->
 	</div>
 </f:section>
