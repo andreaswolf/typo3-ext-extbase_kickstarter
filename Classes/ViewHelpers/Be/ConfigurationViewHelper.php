@@ -65,6 +65,7 @@ class Tx_ExtbaseKickstarter_ViewHelpers_Be_ConfigurationViewHelper extends Tx_Fl
 		$pageRenderer->addJsFile(t3lib_extMgm::extRelPath('extbase_kickstarter') . '/Resources/Public/JavaScript/UserInterface/Layout.js');
 
 		// Oryx libraries
+		$pageRenderer->addJsFile(t3lib_extMgm::extRelPath('extbase_kickstarter') . '/Resources/Public/JavaScript/Editor/path_parser.js');
 		$pageRenderer->addJsFile(t3lib_extMgm::extRelPath('extbase_kickstarter') . '/Resources/Public/JavaScript/Editor/translation_en_us.js');
 		$pageRenderer->addJsFile(t3lib_extMgm::extRelPath('extbase_kickstarter') . '/Resources/Public/JavaScript/Editor/oryx.debug.js');
 
