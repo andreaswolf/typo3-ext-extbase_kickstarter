@@ -35,8 +35,8 @@ T3X.ExtbaseKickstarter.UserInterface.Layout = Ext.extend(Ext.Viewport, {
             }, {
                 title: 'Domain Modeling',
                 id: 'tab-dm',
-                html: '<p>Domain modeling will take place here.</p>',
-                autoScroll: true
+                layout: 'fit',
+                padding: 0
             }, {
                 title: 'Backend Modules',
                 id: 'tab-be',
