@@ -8,11 +8,11 @@
 <f:section name="content">
 
 	<script>
-
+		ORYX.CONFIG.ROOT_PATH = '{extPath}Resources/Public/Oryx/';
+		
 <![CDATA[
 		function onOryxResourcesLoaded(){
 			ORYX_LOGLEVEL = 5;
-			ORYX.CONFIG.ROOT_PATH = '/extdev-trunk/typo3conf/ext/extbase_kickstarter/Resources/Public/Oryx/';
 			ORYX.MashupAPI = {
 				loadablePlugins: [
 					'ORYX.Plugins.DragDropResize',
@@ -45,7 +45,7 @@
 				//id: Ext.get('tab-dm').getEl().id,
 				id: 'tab-dm',
 				stencilset: {
-					url: 'http://typo3-dev' + ORYX.CONFIG.ROOT_PATH + 'stencilsets/workflownets/workflownets.json'
+					url: ORYX.CONFIG.ROOT_PATH + 'stencilsets/workflownets/workflownets.json'
 				}
 			});
 		}

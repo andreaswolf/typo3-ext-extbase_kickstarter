@@ -69,6 +69,7 @@ class Tx_ExtbaseKickstarter_Controller_KickstarterModuleController extends Tx_Ex
 	}
 
 	public function domainmodellingAction() {
+		$this->view->assign('extPath', t3lib_extMgm::extRelPath('extbase_kickstarter'));
 	}
 
 	/**
