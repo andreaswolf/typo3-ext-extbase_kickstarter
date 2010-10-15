@@ -1,0 +1,67 @@
+***************
+*** 116,124 ****
+  
+  		
+  
+- 		if (!this.hashedContainers[sh.resourceId]) {
+  
+- 			this.hashedContainers[sh.resourceId] = sh.bounds.clone();
+  
+  			return;
+  
+--- 116,124 ----
+  
+  		
+  
++ 		if (this.hashedContainers.get(sh.resourceId) == undefined) {
+  
++ 			this.hashedContainers.set(sh.resourceId, sh.bounds.clone());
+  
+  			return;
+  
+***************
+*** 128,140 ****
+  
+  		var offset = sh.bounds.upperLeft();
+  
+- 		offset.x -= this.hashedContainers[sh.resourceId].upperLeft().x;
+  
+- 		offset.y -= this.hashedContainers[sh.resourceId].upperLeft().y;
+  
+  		
+  
+- 		this.hashedContainers[sh.resourceId] = sh.bounds.clone();
+  
+  		
+  
+--- 128,140 ----
+  
+  		var offset = sh.bounds.upperLeft();
+  
++ 		offset.x -= this.hashedContainers.get(sh.resourceId).upperLeft().x;
+  
++ 		offset.y -= this.hashedContainers.get(sh.resourceId).upperLeft().y;
+  
+  		
+  
++ 		this.hashedContainers.set(sh.resourceId, sh.bounds.clone());
+  
+  		
+  
+***************
+*** 368,374 ****
+  
+  			if(changeBounds) {
+  
+- 				this.hashedContainers[shape.resourceId] = bounds.clone();
+  
+  			}
+  
+--- 368,374 ----
+  
+  			if(changeBounds) {
+  
++ 				this.hashedContainers.set(shape.resourceId, bounds.clone());
+  
+  			}
+  

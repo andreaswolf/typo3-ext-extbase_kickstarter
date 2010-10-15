@@ -1,0 +1,37 @@
+{
+	"title":"Domain modeling",
+	"namespace":"http://typo3.org/stencilset/domainmodeling#",
+	"description":"Simple stencil set for domain modeling.",
+	"stencils": [
+		{
+			"type": "node",
+			"id":"diagram",
+			"title":"Diagram",
+			"description":"",
+			"view":"diagram.svg",
+			"icon":"diagram.png",
+			"mayBeRoot": true,
+			"roles": [
+			],
+			"properties": [
+				{
+					"id":"title",
+					"type":"String",
+					"title":"Title",
+					"value":""
+				}
+			]
+		},
+		{
+			"type":         "node",
+			"id":           "Model",
+			"title":        "Model",      
+			"groups":       ["Model"],
+			"description":  "A Model",
+			"view":         "model.svg",
+			"icon":         "diagram.png",
+			"roles":                []
+		}
+	],
+	"rules":{*/..*/}
+}

@@ -1,0 +1,1782 @@
+diff --git a/editor/client/scripts/Core/StencilSet/complexpropertyitem.js b/editor/client/scripts/Core/StencilSet/complexpropertyitem.js
+index 28c7f04..f60776a 100644
+--- a/editor/client/scripts/Core/StencilSet/complexpropertyitem.js
++++ b/editor/client/scripts/Core/StencilSet/complexpropertyitem.js
+@@ -70,7 +70,7 @@ ORYX.Core.StencilSet.ComplexPropertyItem = Clazz.extend({
+ 		if(jsonItem.type === ORYX.CONFIG.TYPE_CHOICE) {
+ 			if(jsonItem.items && jsonItem.items instanceof Array) {
+ 				jsonItem.items.each((function(item) {
+-					this._items[item.value] = new ORYX.Core.StencilSet.PropertyItem(item, namespace, this);
++					this._items.set(item.value, new ORYX.Core.StencilSet.PropertyItem(item, namespace, this));
+ 				}).bind(this));
+ 			} else {
+ 				throw "ORYX.Core.StencilSet.Property(construct): No property items defined."
+diff --git a/editor/client/scripts/Core/StencilSet/property.js b/editor/client/scripts/Core/StencilSet/property.js
+index 6e13690..fa4ceec 100644
+--- a/editor/client/scripts/Core/StencilSet/property.js
++++ b/editor/client/scripts/Core/StencilSet/property.js
+@@ -139,7 +139,7 @@ ORYX.Core.StencilSet.Property = Clazz.extend({
+             if (jsonProp.items && jsonProp.items instanceof Array) {
+                 jsonProp.items.each((function(jsonItem){
+                 	// why is the item's value used as the key???
+-                    this._items[jsonItem.value] = new ORYX.Core.StencilSet.PropertyItem(jsonItem, namespace, this);
++                    this._items.set(jsonItem.value, new ORYX.Core.StencilSet.PropertyItem(jsonItem, namespace, this));
+                 }).bind(this));
+             }
+             else {
+@@ -151,7 +151,7 @@ ORYX.Core.StencilSet.Property = Clazz.extend({
+             if (jsonProp.type === ORYX.CONFIG.TYPE_COMPLEX) {
+                 if (jsonProp.complexItems && jsonProp.complexItems instanceof Array) {
+                     jsonProp.complexItems.each((function(jsonComplexItem){
+-                        this._complexItems[jsonComplexItem.id] = new ORYX.Core.StencilSet.ComplexPropertyItem(jsonComplexItem, namespace, this);
++                        this._complexItems.set(jsonComplexItem.id, new ORYX.Core.StencilSet.ComplexPropertyItem(jsonComplexItem, namespace, this));
+                     }).bind(this));
+                 }
+                 else {
+@@ -350,7 +350,7 @@ ORYX.Core.StencilSet.Property = Clazz.extend({
+     },
+     
+     item: function(value){
+-        return this._items[value];
++        return this._items.get(value);
+     },
+     
+     toString: function(){
+@@ -363,7 +363,7 @@ ORYX.Core.StencilSet.Property = Clazz.extend({
+     },
+     
+     complexItem: function(id){
+-        return this._complexItems[id];
++        return this._complexItems.get(id);
+     },
+     // extended by Kerstin (end)
+     
+diff --git a/editor/client/scripts/Core/StencilSet/rules.js b/editor/client/scripts/Core/StencilSet/rules.js
+index d5e5c07..eed3b26 100644
+--- a/editor/client/scripts/Core/StencilSet/rules.js
++++ b/editor/client/scripts/Core/StencilSet/rules.js
+@@ -252,15 +252,15 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var cr = this._connectionRules;
+ 
+-			if (jsonRules.connectionRules) {
++			if (jsonRules.get('connectionRules')) {
+ 
+-				jsonRules.connectionRules.each((function(rules){
++				jsonRules.get('connectionRules').each((function(rules){
+ 
+ 					if (this._isRoleOfOtherNamespace(rules.role)) {
+ 
+-						if (!cr[rules.role]) {
++						if (cr.get(rules.role) == undefined) {
+ 
+-							cr[rules.role] = new Hash();
++							cr.set(rules.role, new Hash());
+ 
+ 						}
+ 
+@@ -268,9 +268,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					else {
+ 
+-						if (!cr[namespace + rules.role]) 
++						if (cr.get(namespace + rules.role) == undefined) 
+ 
+-							cr[namespace + rules.role] = new Hash();
++							cr.set(namespace + rules.role, new Hash());
+ 
+ 					}
+ 
+@@ -330,13 +330,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 						
+ 
+-						if (!cr[role][from]) 
++						if (cr.get(role).get(from) == undefined) 
+ 
+-							cr[role][from] = toRoles;
++							cr.get(role).set(from, toRoles);
+ 
+ 						else 
+ 
+-							cr[role][from] = cr[role][from].concat(toRoles);
++							cr.get(role).set(from, cr.get(role).get(from).concat(toRoles));
+ 
+ 						
+ 
+@@ -352,9 +352,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var cardr = this._cardinalityRules;
+ 
+-			if (jsonRules.cardinalityRules) {
++			if (jsonRules.get('cardinalityRules')) {
+ 
+-				jsonRules.cardinalityRules.each((function(rules){
++				jsonRules.get('cardinalityRules').each((function(rules){
+ 
+ 					var cardrKey;
+ 
+@@ -372,13 +372,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					
+ 
+-					if (!cardr[cardrKey]) {
++					if (cardr.get(cardrKey) == undefined) {
+ 
+-						cardr[cardrKey] = {};
++						cardr.set(cardrKey, {});
+ 
+ 						for (i in rules) {
+ 
+-							cardr[cardrKey][i] = rules[i];
++							cardr.get(cardrKey)[i] = rules[i]; // TODO check if this really works
+ 
+ 						}
+ 
+@@ -394,13 +394,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 							if (this._isRoleOfOtherNamespace(rule.role)) {
+ 
+-								oe[rule.role] = rule;
++								oe.set(rule.role, rule);
+ 
+ 							}
+ 
+ 							else {
+ 
+-								oe[namespace + rule.role] = rule;
++								oe.set(namespace + rule.role, rule);
+ 
+ 							}
+ 
+@@ -408,7 +408,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					cardr[cardrKey].outgoingEdges = oe;
++					cardr.get(cardrKey).outgoingEdges = oe;
+ 
+ 					var ie = new Hash();
+ 
+@@ -418,13 +418,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 							if (this._isRoleOfOtherNamespace(rule.role)) {
+ 
+-								ie[rule.role] = rule;
++								ie.set(rule.role, rule);
+ 
+ 							}
+ 
+ 							else {
+ 
+-								ie[namespace + rule.role] = rule;
++								ie.set(namespace + rule.role, rule);
+ 
+ 							}
+ 
+@@ -432,7 +432,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					cardr[cardrKey].incomingEdges = ie;
++					cardr.get(cardrKey).incomingEdges = ie;
+ 
+ 				}).bind(this));
+ 
+@@ -444,9 +444,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var conr = this._containmentRules;
+ 
+-			if (jsonRules.containmentRules) {
++			if (jsonRules.get('containmentRules')) {
+ 
+-				jsonRules.containmentRules.each((function(rules){
++				jsonRules.get('containmentRules').each((function(rules){
+ 
+ 					var conrKey;
+ 
+@@ -462,9 +462,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					if (!conr[conrKey]) {
++					if (conr.get(conrKey) == undefined) {
+ 
+-						conr[conrKey] = [];
++						conr.set(conrKey, []);
+ 
+ 					}
+ 
+@@ -472,13 +472,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 						if (this._isRoleOfOtherNamespace(containRole)) {
+ 
+-							conr[conrKey].push(containRole);
++							conr.get(conrKey).push(containRole);
+ 
+ 						}
+ 
+ 						else {
+ 
+-							conr[conrKey].push(namespace + containRole);
++							conr.get(conrKey).push(namespace + containRole);
+ 
+ 						}
+ 
+@@ -494,9 +494,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var morphr = this._morphingRules;
+ 
+-			if (jsonRules.morphingRules) {
++			if (jsonRules.get('morphingRules')) {
+ 
+-				jsonRules.morphingRules.each((function(rules){
++				jsonRules.get('morphingRules').each((function(rules){
+ 
+ 					var morphrKey;
+ 
+@@ -512,9 +512,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					if (!morphr[morphrKey]) {
++					if (morphr.get(morphrKey) == undefined) {
+ 
+-						morphr[morphrKey] = [];
++						morphr.set(morphrKey, []);
+ 
+ 					}
+ 
+@@ -526,7 +526,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					rules.baseMorphs.each((function(baseMorphStencilId){
+ 
+-						morphr[morphrKey].push(this._getStencilById(namespace + baseMorphStencilId));
++						morphr.get(morphrKey).push(this._getStencilById(namespace + baseMorphStencilId));
+ 
+ 					}).bind(this));
+ 
+@@ -540,7 +540,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var layoutRules = this._layoutRules;
+ 
+-			if (jsonRules.layoutRules) {
++			if (jsonRules.get('layoutRules')) {
+ 
+ 				
+ 
+@@ -564,7 +564,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-				jsonRules.layoutRules.each(function(rules){
++				jsonRules.get('layoutRules').each(function(rules){
+ 
+ 					var layoutKey;
+ 
+@@ -580,33 +580,33 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					if (!layoutRules[layoutKey]) {
++					if (layoutRules.get(layoutKey) == undefined) {
+ 
+-						layoutRules[layoutKey] = {};
++						layoutRules.set(layoutKey, {});
+ 
+ 					}
+ 
+ 					if (rules["in"]){
+ 
+-						layoutRules[layoutKey]["in"] = getDirections(rules["in"]);
++						layoutRules.get(layoutKey)["in"] = getDirections(rules["in"]);
+ 
+ 					}
+ 
+ 					if (rules["ins"]){
+ 
+-						layoutRules[layoutKey]["ins"] = (rules["ins"]||[]).map(function(e){ return getDirections(e) })
++						layoutRules.get(layoutKey)["ins"] = (rules["ins"]||[]).map(function(e){ return getDirections(e) })
+ 
+ 					}
+ 
+ 					if (rules["out"]) {
+ 
+-						layoutRules[layoutKey]["out"] = getDirections(rules["out"]);
++						layoutRules.get(layoutKey)["out"] = getDirections(rules["out"]);
+ 
+ 					}
+ 
+ 					if (rules["outs"]){
+ 
+-						layoutRules[layoutKey]["outs"] = (rules["outs"]||[]).map(function(e){ return getDirections(e) })
++						layoutRules.get(layoutKey)["outs"] = (rules["outs"]||[]).map(function(e){ return getDirections(e) })
+ 
+ 					}
+ 
+@@ -640,7 +640,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		if (args.sourceStencil && args.targetStencil) {
+ 
+-			var source = this._cachedConnectSET[args.sourceStencil.id()];
++			var source = this._cachedConnectSET.get(args.sourceStencil.id());
+ 
+ 			
+ 
+@@ -648,13 +648,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				source = new Hash();
+ 
+-				this._cachedConnectSET[args.sourceStencil.id()] = source;
++				this._cachedConnectSET.set(args.sourceStencil.id(), source);
+ 
+ 			}
+ 
+ 			
+ 
+-			var edge = source[args.edgeStencil.id()];
++			var edge = source.get(args.edgeStencil.id());
+ 
+ 			
+ 
+@@ -662,19 +662,19 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				edge = new Hash();
+ 
+-				source[args.edgeStencil.id()] = edge;
++				source.set(args.edgeStencil.id(), edge);
+ 
+ 			}
+ 
+ 			
+ 
+-			edge[args.targetStencil.id()] = result;
++			edge.set(args.targetStencil.id(), result);
+ 
+ 			
+ 
+ 		} else if (args.sourceStencil) {
+ 
+-			var source = this._cachedConnectSE[args.sourceStencil.id()];
++			var source = this._cachedConnectSE.get(args.sourceStencil.id());
+ 
+ 			
+ 
+@@ -682,19 +682,19 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				source = new Hash();
+ 
+-				this._cachedConnectSE[args.sourceStencil.id()] = source;
++				this._cachedConnectSE.set(args.sourceStencil.id(), source);
+ 
+ 			}
+ 
+ 			
+ 
+-			source[args.edgeStencil.id()] = result;
++			source.set(args.edgeStencil.id(), result);
+ 
+ 
+ 
+ 		} else {
+ 
+-			var target = this._cachedConnectTE[args.targetStencil.id()];
++			var target = this._cachedConnectTE.get(args.targetStencil.id());
+ 
+ 			
+ 
+@@ -702,13 +702,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				target = new Hash();
+ 
+-				this._cachedConnectTE[args.targetStencil.id()] = target;
++				this._cachedConnectTE.set(args.targetStencil.id(), target);
+ 
+ 			}
+ 
+ 			
+ 
+-			target[args.edgeStencil.id()] = result;
++			target.set(args.edgeStencil.id(), result);
+ 
+ 		}
+ 
+@@ -726,7 +726,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		if(args.sourceStencil) {
+ 
+-			var source = this._cachedCardSE[args.sourceStencil.id()]
++			var source = this._cachedCardSE.get(args.sourceStencil.id())
+ 
+ 			
+ 
+@@ -734,7 +734,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				source = new Hash();
+ 
+-				this._cachedCardSE[args.sourceStencil.id()] = source;
++				this._cachedCardSE.set(args.sourceStencil.id(), source);
+ 
+ 			}
+ 
+@@ -748,7 +748,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-			source[args.edgeStencil.id()] = max;
++			source.set(args.edgeStencil.id(), max);
+ 
+ 		}	
+ 
+@@ -756,7 +756,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		if(args.targetStencil) {
+ 
+-			var target = this._cachedCardTE[args.targetStencil.id()]
++			var target = this._cachedCardTE.get(args.targetStencil.id())
+ 
+ 			
+ 
+@@ -764,7 +764,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				target = new Hash();
+ 
+-				this._cachedCardTE[args.targetStencil.id()] = target;
++				this._cachedCardTE.set(args.targetStencil.id(), target);
+ 
+ 			}
+ 
+@@ -778,7 +778,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-			target[args.edgeStencil.id()] = max;
++			target.set(args.edgeStencil.id(), max);
+ 
+ 		}
+ 
+@@ -802,7 +802,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		
+ 
+-		var children = this._cachedContainPC[args.containingStencil.id()];
++		var children = this._cachedContainPC.get(args.containingStencil.id());
+ 
+ 		
+ 
+@@ -810,13 +810,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			children = new Hash();
+ 
+-			this._cachedContainPC[args.containingStencil.id()] = children;
++			this._cachedContainPC.set(args.containingStencil.id(), children);
+ 
+ 		}
+ 
+ 		
+ 
+-		children[args.containedStencil.id()] = result;
++		children.set(args.containedStencil.id(), result);
+ 
+ 		
+ 
+@@ -838,7 +838,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		
+ 
+-		var morphs = this._cachedMorphRS[role];
++		var morphs = this._cachedMorphRS.get(role);
+ 
+ 		
+ 
+@@ -860,7 +860,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			
+ 
+-			this._cachedMorphRS[role] = morphs;
++			this._cachedMorphRS.set(role, morphs);
+ 
+ 		}
+ 
+@@ -1272,7 +1272,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		if(args.sourceStencil && args.targetStencil) {
+ 
+-			var source = this._cachedConnectSET[args.sourceStencil.id()];
++			var source = this._cachedConnectSET.get(args.sourceStencil.id());
+ 
+ 			
+ 
+@@ -1282,7 +1282,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			else {
+ 
+-				var edge = source[args.edgeStencil.id()];
++				var edge = source.get(args.edgeStencil.id());
+ 
+ 
+ 
+@@ -1292,7 +1292,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				else {	
+ 
+-					var target = edge[args.targetStencil.id()];
++					var target = edge.get(args.targetStencil.id());
+ 
+ 
+ 
+@@ -1310,7 +1310,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		} else if (args.sourceStencil) {	
+ 
+-			var source = this._cachedConnectSE[args.sourceStencil.id()];
++			var source = this._cachedConnectSE.get(args.sourceStencil.id());
+ 
+ 			
+ 
+@@ -1320,7 +1320,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			else {
+ 
+-				var edge = source[args.edgeStencil.id()];
++				var edge = source.get(args.edgeStencil.id());
+ 
+ 					
+ 
+@@ -1336,7 +1336,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		} else { // args.targetStencil
+ 
+-			var target = this._cachedConnectTE[args.targetStencil.id()];
++			var target = this._cachedConnectTE.get(args.targetStencil.id());
+ 
+ 			
+ 
+@@ -1346,7 +1346,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			else {
+ 
+-				var edge = target[args.edgeStencil.id()];
++				var edge = target.get(args.edgeStencil.id());
+ 
+ 					
+ 
+@@ -1370,7 +1370,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			if(args.sourceShape) {
+ 
+-				var source = this._cachedCardSE[args.sourceStencil.id()];
++				var source = this._cachedCardSE.get(args.sourceStencil.id());
+ 
+ 				
+ 
+@@ -1378,13 +1378,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					this._cacheCard(args);
+ 
+-					source = this._cachedCardSE[args.sourceStencil.id()];
++					source = this._cachedCardSE.get(args.sourceStencil.id());
+ 
+ 				}
+ 
+ 				
+ 
+-				var max = source[args.edgeStencil.id()];
++				var max = source.get(args.edgeStencil.id());
+ 
+ 				
+ 
+@@ -1396,7 +1396,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-				max = source[args.edgeStencil.id()];
++				max = source.get(args.edgeStencil.id());
+ 
+ 				
+ 
+@@ -1428,7 +1428,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			if (args.targetShape) {
+ 
+-				var target = this._cachedCardTE[args.targetStencil.id()];
++				var target = this._cachedCardTE.get(args.targetStencil.id());
+ 
+ 				
+ 
+@@ -1436,13 +1436,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					this._cacheCard(args);
+ 
+-					target = this._cachedCardTE[args.targetStencil.id()];
++					target = this._cachedCardTE.get(args.targetStencil.id());
+ 
+ 				}
+ 
+ 				
+ 
+-				var max = target[args.edgeStencil.id()];
++				var max = target.get(args.edgeStencil.id());
+ 
+ 				
+ 
+@@ -1454,7 +1454,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-				max = target[args.edgeStencil.id()];
++				max = target.get(args.edgeStencil.id());
+ 
+ 				
+ 
+@@ -1588,7 +1588,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				resultCR = args.sourceStencil.roles().any(function(sourceRole) {
+ 
+-					var targetRoles = edgeRules[sourceRole];
++					var targetRoles = edgeRules.get(sourceRole);
+ 
+ 
+ 
+@@ -1706,7 +1706,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		
+ 
+-		var parent = this._cachedContainPC[args.containingStencil.id()];
++		var parent = this._cachedContainPC.get(args.containingStencil.id());
+ 
+ 		
+ 
+@@ -1716,7 +1716,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		else {
+ 
+-			childValues = parent[args.containedStencil.id()];
++			childValues = parent.get(args.containedStencil.id());
+ 
+ 			
+ 
+@@ -1840,7 +1840,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		result = args.containingStencil.roles().any((function(role) {
+ 
+-			var roles = this._containmentRules[role];
++			var roles = this._containmentRules.get(role);
+ 
+ 			if(roles) {
+ 
+@@ -2208,13 +2208,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			// check if there are layout information
+ 
+-			if (this._layoutRules[role]){
++			if (this._layoutRules.get(role) != undefined){
+ 
+ 				// if so, parse those information to the 'layout' variable
+ 
+-				parseValues(this._layoutRules[role], "in");
++				parseValues(this._layoutRules.get(role), "in");
+ 
+-				parseValues(this._layoutRules[role], "out");
++				parseValues(this._layoutRules.get(role), "out");
+ 
+ 			}
+ 
+@@ -2384,7 +2384,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		child.roles().each((function(role) {
+ 
+-			var cardRule = this._cardinalityRules[role];
++			var cardRule = this._cardinalityRules.get(role);
+ 
+ 			if(cardRule && cardRule.maximumOccurrence) {
+ 
+@@ -2448,7 +2448,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		args.sourceStencil.roles().each((function(role) {
+ 
+-			var cardRule = this._cardinalityRules[role];
++			var cardRule = this._cardinalityRules.get(role);
+ 
+ 
+ 
+@@ -2456,7 +2456,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				args.edgeStencil.roles().each(function(edgeRole) {
+ 
+-					var oe = cardRule.outgoingEdges[edgeRole];
++					var oe = cardRule.outgoingEdges.get(edgeRole);
+ 
+ 
+ 
+@@ -2524,13 +2524,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		args.targetStencil.roles().each((function(role) {
+ 
+-			var cardRule = this._cardinalityRules[role];
++			var cardRule = this._cardinalityRules.get(role);
+ 
+ 			if(cardRule && cardRule.incomingEdges) {
+ 
+ 				args.edgeStencil.roles().each(function(edgeRole) {
+ 
+-					var ie = cardRule.incomingEdges[edgeRole];
++					var ie = cardRule.incomingEdges.get(edgeRole);
+ 
+ 					if(ie && ie.maximum) {
+ 
+@@ -2582,17 +2582,17 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		edgeStencil.roles().each((function(role) {
+ 
+-			if(this._connectionRules[role]) {
++			if(this._connectionRules.get(role) != undefined) {
+ 
+-				this._connectionRules[role].each(function(cr) {
++				this._connectionRules.get(role).each(function(cr) {
+ 
+-					if(edgeRules[cr.key]) {
++					if(edgeRules.get(cr.key) != undefined) {
+ 
+-						edgeRules[cr.key] = edgeRules[cr.key].concat(cr.value);
++						edgeRules.set(cr.key, edgeRules.get(cr.key).concat(cr.value));
+ 
+ 					} else {
+ 
+-						edgeRules[cr.key] = cr.value;
++						edgeRules.set(cr.key, cr.value);
+ 
+ 					}
+ 
+diff --git a/editor/client/scripts/Core/StencilSet/stencil.js b/editor/client/scripts/Core/StencilSet/stencil.js
+index e706018..a7e75ad 100644
+--- a/editor/client/scripts/Core/StencilSet/stencil.js
++++ b/editor/client/scripts/Core/StencilSet/stencil.js
+@@ -188,12 +188,12 @@ ORYX.Core.StencilSet.Stencil = {
+ 		// init property packages
+ 		if(this._jsonStencil.propertyPackages && this._jsonStencil.propertyPackages instanceof Array) {
+ 			this._jsonStencil.propertyPackages.each((function(ppId) {
+-				var pp = this._propertyPackages[ppId];
++				var pp = this._propertyPackages.get(ppId);
+ 				
+ 				if(pp) {
+ 					pp.each((function(prop){
+ 						var oProp = new ORYX.Core.StencilSet.Property(prop, this._namespace, this);
+-						this._properties[oProp.prefix() + "-" + oProp.id()] = oProp;
++						this._properties.set(oProp.prefix() + "-" + oProp.id(), oProp);
+ 					}).bind(this));
+ 				}
+ 			}).bind(this));
+@@ -203,7 +203,7 @@ ORYX.Core.StencilSet.Stencil = {
+ 		if(this._jsonStencil.properties && this._jsonStencil.properties instanceof Array) {
+ 			this._jsonStencil.properties.each((function(prop) {
+ 				var oProp = new ORYX.Core.StencilSet.Property(prop, this._namespace, this);
+-				this._properties[oProp.prefix() + "-" + oProp.id()] = oProp;
++				this._properties.set(oProp.prefix() + "-" + oProp.id(), oProp);
+ 			}).bind(this));
+ 		}
+ 		
+@@ -280,7 +280,7 @@ ORYX.Core.StencilSet.Stencil = {
+ 	},
+ 
+ 	property: function(id) {
+-		return this._properties[id];
++		return this._properties.get(id);
+ 	},
+ 
+ 	roles: function() {
+@@ -315,7 +315,7 @@ ORYX.Core.StencilSet.Stencil = {
+ 	addProperty: function(property, namespace) {
+ 		if(property && namespace) {
+ 			var oProp = new ORYX.Core.StencilSet.Property(property, namespace, this);
+-			this._properties[oProp.prefix() + "-" + oProp.id()] = oProp;
++			this._properties.set(oProp.prefix() + "-" + oProp.id(), oProp);
+ 		}
+ 	},
+ 	
+@@ -325,7 +325,7 @@ ORYX.Core.StencilSet.Stencil = {
+ 				return (propertyId == prop.id());
+ 			});
+ 			if(oProp)
+-				delete this._properties[oProp.prefix() + "-" + oProp.id()];
++				this._properties.unset(oProp.prefix() + "-" + oProp.id());
+ 		}
+ 	},
+ 
+diff --git a/editor/client/scripts/Core/StencilSet/stencilset.js b/editor/client/scripts/Core/StencilSet/stencilset.js
+index c9cd500..2a57ac6 100644
+--- a/editor/client/scripts/Core/StencilSet/stencilset.js
++++ b/editor/client/scripts/Core/StencilSet/stencilset.js
+@@ -192,7 +192,7 @@ ORYX.Core.StencilSet.StencilSet = Clazz.extend({
+     },
+     
+     stencil: function(id){
+-        return this._stencils[id];
++        return this._stencils.get(id);
+     },
+     
+     title: function(){
+@@ -246,7 +246,7 @@ ORYX.Core.StencilSet.StencilSet = Clazz.extend({
+ 					jsonExtension["extends"] += "#";
+ 					
+ 			if(jsonExtension["extends"] == this.namespace()) {
+-				this._extensions[jsonExtension.namespace] = jsonExtension;
++				this._extensions.set(jsonExtension.namespace, jsonExtension);
+ 				
+ 				var defaultPosition = this._stencils.keys().size();
+ 				//load new stencils
+@@ -254,8 +254,8 @@ ORYX.Core.StencilSet.StencilSet = Clazz.extend({
+ 					$A(jsonExtension.stencils).each(function(stencil) {
+ 						defaultPosition++;
+ 						var oStencil = new ORYX.Core.StencilSet.Stencil(stencil, this.namespace(), this._baseUrl, this, undefined, defaultPosition);            
+-						this._stencils[oStencil.id()] = oStencil;
+-						this._availableStencils[oStencil.id()] = oStencil;
++						this._stencils.set(oStencil.id(), oStencil);
++						this._availableStencils.set(oStencil.id(), oStencil);
+ 					}.bind(this));
+ 				}
+ 				
+@@ -298,7 +298,7 @@ ORYX.Core.StencilSet.StencilSet = Clazz.extend({
+ 				//remove stencils
+ 				if(jsonExtension.removestencils) {
+ 					$A(jsonExtension.removestencils).each(function(remstencil) {
+-						delete this._availableStencils[jsonExtension["extends"] + remstencil];
++						this._availableStencils.unset(jsonExtension["extends"] + remstencil);
+ 					}.bind(this));
+ 				}
+ 			}
+@@ -308,15 +308,15 @@ ORYX.Core.StencilSet.StencilSet = Clazz.extend({
+ 	},
+ 	
+ 	removeExtension: function(namespace) {
+-		var jsonExtension = this._extensions[namespace];
++		var jsonExtension = this._extensions.get(namespace);
+ 		if(jsonExtension) {
+ 			
+ 			//unload extension's stencils
+ 			if(jsonExtension.stencils) {
+ 				$A(jsonExtension.stencils).each(function(stencil) {
+ 					var oStencil = new ORYX.Core.StencilSet.Stencil(stencil, this.namespace(), this._baseUrl, this);            
+-					delete this._stencils[oStencil.id()]; // maybe not ??
+-					delete this._availableStencils[oStencil.id()];
++					this._stencils.unset(oStencil.id()); // maybe not ??
++					this._availableStencils.unset(oStencil.id());
+ 				}.bind(this));
+ 			}
+ 			
+@@ -362,11 +362,11 @@ ORYX.Core.StencilSet.StencilSet = Clazz.extend({
+ 			if(jsonExtension.removestencils) {
+ 				$A(jsonExtension.removestencils).each(function(remstencil) {
+ 					var sId = jsonExtension["extends"] + remstencil;
+-					this._availableStencils[sId] = this._stencils[sId];
++					this._availableStencils.set(sId, this._stencils.get(sId));
+ 				}.bind(this));
+ 			}
+ 		}
+-		delete this._extensions[namespace];
++		this._extensions.unset(namespace);
+ 	},
+     
+     __handleStencilset: function(response){
+@@ -434,7 +434,7 @@ ORYX.Core.StencilSet.StencilSet = Clazz.extend({
+ 		// init property packages
+ 		if(this._jsonObject.propertyPackages) {
+ 			$A(this._jsonObject.propertyPackages).each((function(pp) {
+-				pps[pp.name] = pp.properties;
++				pps.set(pp.name, pp.properties);
+ 			}).bind(this));
+ 		}
+ 		
+@@ -446,8 +446,8 @@ ORYX.Core.StencilSet.StencilSet = Clazz.extend({
+         	
+             // instantiate normally.
+             var oStencil = new ORYX.Core.StencilSet.Stencil(stencil, this.namespace(), this._baseUrl, this, pps, defaultPosition);      
+-			this._stencils[oStencil.id()] = oStencil;
+-			this._availableStencils[oStencil.id()] = oStencil;
++			this._stencils.set(oStencil.id(), oStencil);
++			this._availableStencils.set(oStencil.id(), oStencil);
+             
+         }).bind(this));
+     },
+diff --git a/editor/client/scripts/Core/StencilSet/stencilsets.js b/editor/client/scripts/Core/StencilSet/stencilsets.js
+index e92a897..7aa4161 100644
+--- a/editor/client/scripts/Core/StencilSet/stencilsets.js
++++ b/editor/client/scripts/Core/StencilSet/stencilsets.js
+@@ -55,12 +55,12 @@ ORYX.Core.StencilSet._rulesByEditorInstance = new Hash();
+  * 					the editor with the editorId.
+  */
+ ORYX.Core.StencilSet.stencilSets = function(editorId) {
+-	var stencilSetNSs = ORYX.Core.StencilSet._StencilSetNSByEditorInstance[editorId];
++	var stencilSetNSs = ORYX.Core.StencilSet._StencilSetNSByEditorInstance.get(editorId);
+ 	var stencilSets = new Hash();
+ 	if(stencilSetNSs) {
+ 		stencilSetNSs.each(function(stencilSetNS) {
+ 			var stencilSet = ORYX.Core.StencilSet.stencilSet(stencilSetNS)
+-			stencilSets[stencilSet.namespace()] = stencilSet;
++			stencilSets.set(stencilSet.namespace(), stencilSet);
+ 		});
+ 	}
+ 	return stencilSets;
+@@ -83,7 +83,7 @@ ORYX.Core.StencilSet.stencilSet = function(namespace) {
+ 	var splitted = namespace.split("#", 1);
+ 	if(splitted.length === 1) {
+ 		ORYX.Log.trace("Getting stencil set %0", splitted[0]);
+-		return ORYX.Core.StencilSet._stencilSetsByNamespace[splitted[0] + "#"];
++		return ORYX.Core.StencilSet._stencilSetsByNamespace.get(splitted[0] + "#");
+ 	} else {
+ 		return undefined;
+ 	}
+@@ -118,10 +118,10 @@ ORYX.Core.StencilSet.stencil = function(id) {
+  * 									specified by its editor id.
+  */
+ ORYX.Core.StencilSet.rules = function(editorId) {
+-	if(!ORYX.Core.StencilSet._rulesByEditorInstance[editorId]) {
+-		ORYX.Core.StencilSet._rulesByEditorInstance[editorId] = new ORYX.Core.StencilSet.Rules();;
++	if(ORYX.Core.StencilSet._rulesByEditorInstance.get(editorId) == undefined) {
++		ORYX.Core.StencilSet._rulesByEditorInstance.set(editorId, new ORYX.Core.StencilSet.Rules());
+ 	}
+-	return ORYX.Core.StencilSet._rulesByEditorInstance[editorId];
++	return ORYX.Core.StencilSet._rulesByEditorInstance.get(editorId);
+ };
+ 
+ /**
+@@ -134,35 +134,35 @@ ORYX.Core.StencilSet.rules = function(editorId) {
+  * initializes the Rules object for the editor instance.
+  */
+ ORYX.Core.StencilSet.loadStencilSet = function(url, editorId) {
+-	var stencilSet = ORYX.Core.StencilSet._stencilSetsByUrl[url];
++	var stencilSet = ORYX.Core.StencilSet._stencilSetsByUrl.get(url);
+ 
+ 	if(!stencilSet) {
+ 		//load stencil set
+ 		stencilSet = new ORYX.Core.StencilSet.StencilSet(url);
+ 		
+ 		//store stencil set
+-		ORYX.Core.StencilSet._stencilSetsByNamespace[stencilSet.namespace()] = stencilSet;
++		ORYX.Core.StencilSet._stencilSetsByNamespace.set(stencilSet.namespace(), stencilSet);
+ 		
+ 		//store stencil set by url
+-		ORYX.Core.StencilSet._stencilSetsByUrl[url] = stencilSet;
++		ORYX.Core.StencilSet._stencilSetsByUrl.set(url, stencilSet);
+ 	}
+ 	
+ 	var namespace = stencilSet.namespace();
+ 	
+ 	//store which editorInstance loads the stencil set
+-	if(ORYX.Core.StencilSet._StencilSetNSByEditorInstance[editorId]) {
+-		ORYX.Core.StencilSet._StencilSetNSByEditorInstance[editorId].push(namespace);
++	if(ORYX.Core.StencilSet._StencilSetNSByEditorInstance.get(editorId) != undefined) {
++		ORYX.Core.StencilSet._StencilSetNSByEditorInstance.get(editorId).push(namespace);
+ 	} else {
+-		ORYX.Core.StencilSet._StencilSetNSByEditorInstance[editorId] = [namespace];
++		ORYX.Core.StencilSet._StencilSetNSByEditorInstance.set(editorId, [namespace]);
+ 	}
+ 
+ 	//store the rules for the editor instance
+-	if(ORYX.Core.StencilSet._rulesByEditorInstance[editorId]) {
+-		ORYX.Core.StencilSet._rulesByEditorInstance[editorId].initializeRules(stencilSet);
++	if(ORYX.Core.StencilSet._rulesByEditorInstance.get(editorId) != undefined) {
++		ORYX.Core.StencilSet._rulesByEditorInstance.get(editorId).initializeRules(stencilSet);
+ 	} else {
+ 		var rules = new ORYX.Core.StencilSet.Rules();
+ 		rules.initializeRules(stencilSet);
+-		ORYX.Core.StencilSet._rulesByEditorInstance[editorId] = rules;
++		ORYX.Core.StencilSet._rulesByEditorInstance.set(editorId, rules);
+ 	}
+ };
+ 
+diff --git a/editor/client/scripts/Core/abstractshape.js b/editor/client/scripts/Core/abstractshape.js
+index 822faff..69c9107 100644
+--- a/editor/client/scripts/Core/abstractshape.js
++++ b/editor/client/scripts/Core/abstractshape.js
+@@ -67,8 +67,8 @@ ORYX.Core.AbstractShape = ORYX.Core.UIObject.extend(
+ 		//Initialization of property map and initial value.
+ 		this._stencil.properties().each((function(property) {
+ 			var key = property.prefix() + "-" + property.id();
+-			this.properties[key] = property.value();
+-			this.propertiesChanged[key] = true;
++			this.properties.set(key, property.value());
++			this.propertiesChanged.set(key, true);
+ 		}).bind(this));
+ 		
+ 		// if super stencil was defined, also regard stencil's properties:
+@@ -76,9 +76,9 @@ ORYX.Core.AbstractShape = ORYX.Core.UIObject.extend(
+ 			stencil.properties().each((function(property) {
+ 				var key = property.prefix() + "-" + property.id();
+ 				var value = property.value();
+-				var oldValue = this.properties[key];
+-				this.properties[key] = value;
+-				this.propertiesChanged[key] = true;
++				var oldValue = this.properties.get(key);
++				this.properties.set(key, value);
++				this.propertiesChanged.set(key, true);
+ 
+ 				// Raise an event, to show that the property has changed
+ 				// required for plugins like processLink.js
+@@ -267,10 +267,10 @@ ORYX.Core.AbstractShape = ORYX.Core.UIObject.extend(
+ 	 * @param value {Object} Can be of type String or Number according to property type.
+ 	 */
+ 	setProperty: function(key, value, force) {
+-		var oldValue = this.properties[key];
++		var oldValue = this.properties.get(key);
+ 		if(oldValue !== value || force === true) {
+-			this.properties[key] = value;
+-			this.propertiesChanged[key] = true;
++			this.properties.set(key, value);
++			this.propertiesChanged.set(key, true);
+ 			this._changed();
+ 			
+ 			// Raise an event, to show that the property has changed
+@@ -301,12 +301,12 @@ ORYX.Core.AbstractShape = ORYX.Core.UIObject.extend(
+ 	setHiddenProperty: function(key, value) {
+ 		// IF undefined, Delete
+ 		if (value === undefined) {
+-			delete this.hiddenProperties[key];
++			this.hiddenProperties.unset(key);
+ 			return;
+ 		}
+-		var oldValue = this.hiddenProperties[key];
++		var oldValue = this.hiddenProperties.get(key);
+ 		if(oldValue !== value) {
+-			this.hiddenProperties[key] = value;
++			this.hiddenProperties.set(key, value);
+ 		}
+ 	},
+ 	/**
+@@ -344,7 +344,7 @@ ORYX.Core.AbstractShape = ORYX.Core.UIObject.extend(
+ 			var name = property.id();		// Get name
+ 			
+ 			//if(typeof this.properties[prefix+'-'+name] == 'boolean' || this.properties[prefix+'-'+name] != "")
+-				serializedObject.push({name: name, prefix: prefix, value: this.properties[prefix+'-'+name], type: 'literal'});
++				serializedObject.push({name: name, prefix: prefix, value: this.properties.get(prefix+'-'+name), type: 'literal'});
+ 
+ 		}).bind(this));
+ 		
+diff --git a/editor/client/scripts/Core/edge.js b/editor/client/scripts/Core/edge.js
+index 4984c89..f04ca01 100644
+--- a/editor/client/scripts/Core/edge.js
++++ b/editor/client/scripts/Core/edge.js
+@@ -398,12 +398,12 @@ ORYX.Core.Edge = {
+ 		position.y = 0;
+ 		
+ 		/* Case: Node was just added */
+-		if(!this.attachedNodePositionData[node.getId()]) {
+-			this.attachedNodePositionData[node.getId()] = new Object();
+-			this.attachedNodePositionData[node.getId()]
+-					.relativDistanceFromDocker1 = 0;
+-			this.attachedNodePositionData[node.getId()].node = node;
+-			this.attachedNodePositionData[node.getId()].segment = new Object();
++		if(this.attachedNodePositionData.get(node.getId()) == undefined) {
++			nodePositionData = new Object();
++			nodePositionData.relativDistanceFromDocker1 = 0;
++			nodePositionData.node = node;
++			nodePositionData.segment = new Object();
++			this.attachedNodePositionData.set(node.getId(), nodePositionData);
+ 			this.findEdgeSegmentForNode(node);
+ 		}else if(node.isChanged) {
+ 			this.findEdgeSegmentForNode(node);
+@@ -442,9 +442,9 @@ ORYX.Core.Edge = {
+ 				
+ 				smallestDistance = distance;
+ 				
+-				this.attachedNodePositionData[node.getId()].segment.docker1 = 
++				this.attachedNodePositionData.get(node.getId()).segment.docker1 = 
+ 													this.dockers[i-1];
+-				this.attachedNodePositionData[node.getId()].segment.docker2 = 
++				this.attachedNodePositionData.get(node.getId()).segment.docker2 = 
+ 													this.dockers[i];
+ 	
+ 			}
+@@ -458,21 +458,21 @@ ORYX.Core.Edge = {
+ 			if(!distance && !smallestDistance && smallestDistance != 0) {
+ 				(ORYX.Core.Math.getDistancePointToPoint(nodeCenterPoint, lineP1)
+ 					< ORYX.Core.Math.getDistancePointToPoint(nodeCenterPoint, lineP2)) ?
+-					this.attachedNodePositionData[node.getId()].relativDistanceFromDocker1 = 0 :
+-					this.attachedNodePositionData[node.getId()].relativDistanceFromDocker1 = 1;
+-				this.attachedNodePositionData[node.getId()].segment.docker1 = 
++					this.attachedNodePositionData.get(node.getId()).relativDistanceFromDocker1 = 0 :
++					this.attachedNodePositionData.get(node.getId()).relativDistanceFromDocker1 = 1;
++				this.attachedNodePositionData.get(node.getId()).segment.docker1 = 
+ 													this.dockers[i-1];
+-				this.attachedNodePositionData[node.getId()].segment.docker2 = 
++				this.attachedNodePositionData.get(node.getId()).segment.docker2 = 
+ 													this.dockers[i];
+ 			}
+ 		}
+ 		
+ 		/* Calculate position on edge segment for the node */
+ 		if(smallestDistance || smallestDistance == 0) {
+-			this.attachedNodePositionData[node.getId()].relativDistanceFromDocker1 =
++			this.attachedNodePositionData.get(node.getId()).relativDistanceFromDocker1 =
+ 			this.getLineParameterForPosition(
+-					this.attachedNodePositionData[node.getId()].segment.docker1,
+-					this.attachedNodePositionData[node.getId()].segment.docker2,
++					this.attachedNodePositionData.get(node.getId()).segment.docker1,
++					this.attachedNodePositionData.get(node.getId()).segment.docker2,
+ 					node);
+ 		}
+ 	},
+@@ -529,7 +529,7 @@ ORYX.Core.Edge = {
+         //TODO consider points for marker mids
+         var lastPoint;
+         this._paths.each((function(path, index){
+-            var dockers = this._dockersByPath[path.id];
++            var dockers = this._dockersByPath.get(path.id);
+             var c = undefined;
+ 			var d = undefined;
+             if (lastPoint) {
+@@ -783,8 +783,8 @@ ORYX.Core.Edge = {
+ 	remove: function(shape) {
+ 		arguments.callee.$.remove.apply(this, arguments);
+ 		
+-		if(this.attachedNodePositionData[shape.getId()]) {
+-			delete this.attachedNodePositionData[shape.getId()];
++		if(this.attachedNodePositionData(shape.getId()) != undefined) {
++			this.attachedNodePositionData.unset(shape.getId());
+ 		}
+ 		
+ 		/* Adjust child shapes if neccessary */
+@@ -881,7 +881,7 @@ ORYX.Core.Edge = {
+                     }
+                     else {
+                         this.remove(docker);
+-                        this._dockersByPath[pair.key] = pair.value.without(docker);
++                        this._dockersByPath.set(pair.key, pair.value.without(docker));
+                         this.isChanged = true;
+                         this._dockerChanged();
+                         return true;
+@@ -950,7 +950,7 @@ ORYX.Core.Edge = {
+             markerElements.each(function(markerElement){
+                 try {
+                     marker = new ORYX.Core.SVG.SVGMarker(markerElement.cloneNode(true));
+-                    me._markers[marker.id] = marker;
++                    me._markers.set(marker.id, marker);
+                     var textElements = $A(marker.element.getElementsByTagNameNS(NAMESPACE_SVG, "text"));
+                     var label;
+                     textElements.each(function(textElement){
+@@ -958,7 +958,7 @@ ORYX.Core.Edge = {
+                             textElement: textElement,
+ 							shapeId: this.id
+                         });
+-                        me._labels[label.id] = label;
++                        me._labels.set(label.id, label);
+                     });
+                 } 
+                 catch (e) {
+@@ -996,7 +996,7 @@ ORYX.Core.Edge = {
+                     var markerStartId = this.id.concat(markerUrl.replace(/\)$/, ''));
+                     path.setAttributeNS(null, "marker-start", "url(#" + markerStartId + ")");
+                     
+-                    markersByThisPath.push(this._markers[markerStartId]);
++                    markersByThisPath.push(this._markers.get(markerStartId));
+                 }
+                 
+                 markerUrl = path.getAttributeNS(null, "marker-mid");
+@@ -1007,7 +1007,7 @@ ORYX.Core.Edge = {
+                     var markerMidId = this.id.concat(markerUrl.replace(/\)$/, ''));
+                     path.setAttributeNS(null, "marker-mid", "url(#" + markerMidId + ")");
+                     
+-                    markersByThisPath.push(this._markers[markerMidId]);
++                    markersByThisPath.push(this._markers.get(markerMidId));
+                 }
+                 
+                 markerUrl = path.getAttributeNS(null, "marker-end");
+@@ -1018,10 +1018,10 @@ ORYX.Core.Edge = {
+                     var markerEndId = this.id.concat(markerUrl.replace(/\)$/, ''));
+                     path.setAttributeNS(null, "marker-end", "url(#" + markerEndId + ")");
+                     
+-                    markersByThisPath.push(this._markers[markerEndId]);
++                    markersByThisPath.push(this._markers.get(markerEndId));
+                 }
+                 
+-                this._markersByPath[pathId] = markersByThisPath;
++                this._markersByPath.set(pathId, markersByThisPath);
+                 
+                 //init dockers
+                 var parser = new PathParser();
+@@ -1033,7 +1033,7 @@ ORYX.Core.Edge = {
+                     throw "Edge: Path has to have two or more points specified.";
+                 }
+                 
+-                this._dockersByPath[pathId] = [];
++                this._dockersByPath.set(pathId, []);
+                 
+ 				for (var i = 0; i < handler.points.length; i += 2) {
+ 					//handler.points.each((function(point, pIndex){
+@@ -1047,7 +1047,7 @@ ORYX.Core.Edge = {
+ 						docker.bounds.registerCallback(this._dockerChangedCallback);
+ 						this.add(docker, this.dockers.length);
+ 						
+-						//this._dockersByPath[pathId].push(docker);
++						//this._dockersByPath.get(pathId).push(docker);
+ 						
+ 						//calculate minPoint and maxPoint
+ 						if (minPointX) {
+@@ -1124,7 +1124,7 @@ ORYX.Core.Edge = {
+ 				shapeId: this.id
+             });
+             this.node.childNodes[0].childNodes[0].appendChild(label.node);
+-            this._labels[label.id] = label;
++            this._labels.set(label.id, label);
+         }).bind(this)); 
+ 		
+         //set title
+@@ -1366,17 +1366,17 @@ ORYX.Core.Edge = {
+                     
+                     if (path) {
+                         if (index === 0) {
+-                            while (this._dockersByPath[path.id].length > 2) {
+-                                this.removeDocker(this._dockersByPath[path.id][1]);
++                            while (this._dockersByPath.get(path.id).length > 2) {
++                                this.removeDocker(this._dockersByPath.get(path.id)[1]);
+                             }
+                         }
+                         else {
+-                            while (this._dockersByPath[path.id].length > 1) {
+-                                this.removeDocker(this._dockersByPath[path.id][0]);
++                            while (this._dockersByPath.get(path.id).length > 1) {
++                                this.removeDocker(this._dockersByPath.get(path.id)[0]);
+                             }
+                         }
+                         
+-                        var dockersByPath = this._dockersByPath[path.id];
++                        var dockersByPath = this._dockersByPath.get(path.id);
+                         
+                         if (index === 0) {
+                             //set position of first docker
+diff --git a/editor/client/scripts/Core/main.js b/editor/client/scripts/Core/main.js
+index e5673e7..a8dc779 100644
+--- a/editor/client/scripts/Core/main.js
++++ b/editor/client/scripts/Core/main.js
+@@ -219,12 +219,12 @@ ORYX.Editor = {
+ 		this._keydownEnabled = 	true;
+ 		this._keyupEnabled =  	true;
+ 
+-		this.DOMEventListeners[ORYX.CONFIG.EVENT_MOUSEDOWN] = [];
+-		this.DOMEventListeners[ORYX.CONFIG.EVENT_MOUSEUP] 	= [];
+-		this.DOMEventListeners[ORYX.CONFIG.EVENT_MOUSEOVER] = [];
+-		this.DOMEventListeners[ORYX.CONFIG.EVENT_MOUSEOUT] 	= [];
+-		this.DOMEventListeners[ORYX.CONFIG.EVENT_SELECTION_CHANGED] = [];
+-		this.DOMEventListeners[ORYX.CONFIG.EVENT_MOUSEMOVE] = [];
++		this.DOMEventListeners.set(ORYX.CONFIG.EVENT_MOUSEDOWN, []);
++		this.DOMEventListeners.set(ORYX.CONFIG.EVENT_MOUSEUP, []);
++		this.DOMEventListeners.set(ORYX.CONFIG.EVENT_MOUSEOVER, []);
++		this.DOMEventListeners.set(ORYX.CONFIG.EVENT_MOUSEOUT, []);
++		this.DOMEventListeners.set(ORYX.CONFIG.EVENT_SELECTION_CHANGED, []);
++		this.DOMEventListeners.set(ORYX.CONFIG.EVENT_MOUSEMOVE, []);
+ 				
+ 	},
+ 	
+@@ -1153,7 +1153,7 @@ ORYX.Editor = {
+ 				return;
+ 			}
+ 			
+-			var stencilset = this.getStencilSets()[extension["extends"]];
++			var stencilset = this.getStencilSets().get(extension["extends"]);
+ 			
+ 			if (!stencilset) {
+ 				return;
+@@ -1179,7 +1179,7 @@ ORYX.Editor = {
+ 		}
+ 		if(this.DOMEventListeners.keys().member(eventType)) {
+ 			var value = this.DOMEventListeners.remove(eventType);
+-			this.DOMEventListeners['disable_' + eventType] = value;
++			this.DOMEventListeners.set('disable_' + eventType, value);
+ 		}
+ 	},
+ 
+@@ -1194,7 +1194,7 @@ ORYX.Editor = {
+ 		
+ 		if(this.DOMEventListeners.keys().member("disable_" + eventType)) {
+ 			var value = this.DOMEventListeners.remove("disable_" + eventType);
+-			this.DOMEventListeners[eventType] = value;
++			this.DOMEventListeners.set(eventType, value);
+ 		}
+ 	},
+ 
+@@ -1203,15 +1203,15 @@ ORYX.Editor = {
+ 	 */
+ 	registerOnEvent: function(eventType, callback) {
+ 		if(!(this.DOMEventListeners.keys().member(eventType))) {
+-			this.DOMEventListeners[eventType] = [];
++			this.DOMEventListeners.set(eventType, []);
+ 		}
+ 
+-		this.DOMEventListeners[eventType].push(callback);
++		this.DOMEventListeners.get(eventType).push(callback);
+ 	},
+ 
+ 	unregisterOnEvent: function(eventType, callback) {
+ 		if(this.DOMEventListeners.keys().member(eventType)) {
+-			this.DOMEventListeners[eventType] = this.DOMEventListeners[eventType].without(callback);
++			this.DOMEventListeners.set(eventType, this.DOMEventListeners.get(eventType).without(callback));
+ 		} else {
+ 			// Event is not supported
+ 			// TODO: Error Handling
+@@ -1520,7 +1520,7 @@ ORYX.Editor = {
+ 	*/
+ 	_executeEventImmediately: function(eventObj) {
+ 		if(this.DOMEventListeners.keys().member(eventObj.event.type)) {
+-			this.DOMEventListeners[eventObj.event.type].each((function(value) {
++			this.DOMEventListeners.get(eventObj.event.type).each((function(value) {
+ 				value(eventObj.event, eventObj.arg);		
+ 			}).bind(this));
+ 		}
+diff --git a/editor/client/scripts/Core/node.js b/editor/client/scripts/Core/node.js
+index ae8f5d7..338998e 100644
+--- a/editor/client/scripts/Core/node.js
++++ b/editor/client/scripts/Core/node.js
+@@ -795,7 +795,7 @@ ORYX.Core.Node = {
+             });
+             label.x -= offsetX;
+             label.y -= offsetY;
+-            this._labels[label.id] = label;
++            this._labels.set(label.id, label);
+         }).bind(this));
+     },
+ 	
+diff --git a/editor/client/scripts/Core/shape.js b/editor/client/scripts/Core/shape.js
+index 398816e..93690b6 100644
+--- a/editor/client/scripts/Core/shape.js
++++ b/editor/client/scripts/Core/shape.js
+@@ -100,9 +100,9 @@ ORYX.Core.Shape = {
+ 			var me = this;
+ 			this.propertiesChanged.each((function(propChanged) {
+ 				if(propChanged.value) {
+-					var prop = this.properties[propChanged.key];
++					var prop = this.properties.get(propChanged.key);
+ 					var property = this.getStencil().property(propChanged.key);
+-					this.propertiesChanged[propChanged.key] = false;
++					this.propertiesChanged.set(propChanged.key, false);
+ 
+ 					//handle choice properties
+ 					if(property.type() == ORYX.CONFIG.TYPE_CHOICE) {
+@@ -110,7 +110,7 @@ ORYX.Core.Shape = {
+ 						property.refToView().each((function(ref) {
+ 							//if property is referencing a label, update the label
+ 							if(ref !== "") {
+-								var label = this._labels[this.id + ref];
++								var label = this._labels.get(this.id + ref);
+ 								if (label) {
+ 									label.text(property.item(prop).title());
+ 								}
+@@ -123,17 +123,17 @@ ORYX.Core.Shape = {
+ 						var refreshedSvgElements = new Hash();
+ 						property.items().each((function(item) {
+ 							item.refToView().each((function(itemRef) {
+-								if(itemRef == "") { this.propertiesChanged[propChanged.key] = true; return; }
++								if(itemRef == "") { this.propertiesChanged.set(propChanged.key, true); return; }
+ 								
+ 								var svgElem = this.node.ownerDocument.getElementById(this.id + itemRef);
+ 	
+-								if(!svgElem) { this.propertiesChanged[propChanged.key] = true; return; }
++								if(!svgElem) { this.propertiesChanged.set(propChanged.key, true); return; }
+ 								
+ 								
+ 								/* Do not refresh the same svg element multiple times */
+-								if(!refreshedSvgElements[svgElem.id] || prop == item.value()) {
++								if(refreshedSvgElements.get(svgElem.id) == undefined || prop == item.value()) {
+ 									svgElem.setAttributeNS(null, 'display', ((prop == item.value()) ? 'inherit' : 'none'));
+-									refreshedSvgElements[svgElem.id] = svgElem;
++									refreshedSvgElements.set(svgElem.id, svgElem);
+ 								}
+ 								
+ 								// Reload the href if there is an image-tag
+@@ -149,7 +149,7 @@ ORYX.Core.Shape = {
+ 							//if the property does not reference an SVG element,
+ 							// do nothing
+ 
+-							if(ref === "") { this.propertiesChanged[propChanged.key] = true; return; }
++							if(ref === "") { this.propertiesChanged.set(propChanged.key, true); return; }
+ 		
+ 							var refId = this.id + ref;
+ 
+@@ -168,15 +168,15 @@ ORYX.Core.Shape = {
+ 										return elem.getAttributeNS(null, 'id') === refId;
+ 									});
+ 									
+-									if(!svgElem) { this.propertiesChanged[propChanged.key] = true; return; } 
++									if(!svgElem) { this.propertiesChanged.set(propChanged.key, true); return; } 
+ 								} else {
+-									this.propertiesChanged[propChanged.key] = true;
++									this.propertiesChanged.set(propChanged.key, true);
+ 									return;
+ 								}					
+ 							}
+ 							
+ 							if (property.complexAttributeToView()) {
+-								var label = this._labels[refId];
++								var label = this._labels.get(refId);
+ 								if (label) {
+ 									try {
+ 								    	propJson = prop.evalJSON();
+@@ -216,13 +216,13 @@ ORYX.Core.Shape = {
+ 										}
+ 										break;
+ 									case ORYX.CONFIG.TYPE_STRING:
+-										var label = this._labels[refId];
++										var label = this._labels.get(refId);
+ 										if (label) {
+ 											label.text(prop);
+ 										}
+ 										break;
+ 									case ORYX.CONFIG.TYPE_INTEGER:
+-										var label = this._labels[refId];
++										var label = this._labels.get(refId);
+ 										if (label) {
+ 											label.text(prop);
+ 										}
+@@ -235,7 +235,7 @@ ORYX.Core.Shape = {
+ 											svgElem.setAttributeNS(null, 'stroke-opacity', prop);
+ 										}
+ 										if(!property.fillOpacity() && !property.strokeOpacity()) {
+-											var label = this._labels[refId];
++											var label = this._labels.get(refId);
+ 											if (label) {
+ 												label.text(prop);
+ 											}
+diff --git a/editor/client/scripts/Plugins/Layouter/containerLayouter.js b/editor/client/scripts/Plugins/Layouter/containerLayouter.js
+index b6b1bbf..497f336 100644
+--- a/editor/client/scripts/Plugins/Layouter/containerLayouter.js
++++ b/editor/client/scripts/Plugins/Layouter/containerLayouter.js
+@@ -116,9 +116,9 @@ ORYX.Plugins.ContainerLayouter = {
+ 
+ 		
+ 
+-		if (!this.hashedContainers[sh.resourceId]) {
++		if (this.hashedContainers.get(sh.resourceId) == undefined) {
+ 
+-			this.hashedContainers[sh.resourceId] = sh.bounds.clone();
++			this.hashedContainers.set(sh.resourceId, sh.bounds.clone());
+ 
+ 			return;
+ 
+@@ -128,13 +128,13 @@ ORYX.Plugins.ContainerLayouter = {
+ 
+ 		var offset = sh.bounds.upperLeft();
+ 
+-		offset.x -= this.hashedContainers[sh.resourceId].upperLeft().x;
++		offset.x -= this.hashedContainers.get(sh.resourceId).upperLeft().x;
+ 
+-		offset.y -= this.hashedContainers[sh.resourceId].upperLeft().y;
++		offset.y -= this.hashedContainers.get(sh.resourceId).upperLeft().y;
+ 
+ 		
+ 
+-		this.hashedContainers[sh.resourceId] = sh.bounds.clone();
++		this.hashedContainers.set(sh.resourceId, sh.bounds.clone());
+ 
+ 		
+ 
+@@ -368,7 +368,7 @@ ORYX.Plugins.ContainerLayouter = {
+ 
+ 			if(changeBounds) {
+ 
+-				this.hashedContainers[shape.resourceId] = bounds.clone();
++				this.hashedContainers.set(shape.resourceId, bounds.clone());
+ 
+ 			}
+ 
+diff --git a/editor/client/scripts/Plugins/addssextension.js b/editor/client/scripts/Plugins/addssextension.js
+index d16f7d8..7280acf 100644
+--- a/editor/client/scripts/Plugins/addssextension.js
++++ b/editor/client/scripts/Plugins/addssextension.js
+@@ -65,7 +65,7 @@ ORYX.Plugins.SSExtensionLoader = {
+ 					var stencilsets = this.facade.getStencilSets();
+                     
+                     var validExtensions = jsonObject.extensions.findAll(function(extension){
+-                        var stencilset = stencilsets[extension["extends"]];
++                        var stencilset = stencilsets.get(extension["extends"]);
+ 						
+ 						if(stencilset) return true;
+ 						else return false;
+@@ -73,7 +73,7 @@ ORYX.Plugins.SSExtensionLoader = {
+                     
+                     var loadedExtensions = validExtensions.findAll(function(extension) {
+                     	return stencilsets.values().any(function(ss) { 
+-                    		if(ss.extensions()[extension.namespace]) return true;
++                    		if(ss.extensions().get(extension.namespace)) return true;
+                     		else return false;
+                     	})
+                     });
+diff --git a/editor/client/scripts/Plugins/file.js b/editor/client/scripts/Plugins/file.js
+index f593e4c..ce74d4c 100644
+--- a/editor/client/scripts/Plugins/file.js
++++ b/editor/client/scripts/Plugins/file.js
+@@ -116,7 +116,7 @@ ORYX.Plugins.Save = Clazz.extend({
+ 		
+ 		if(forceNew){
+ 			var ss 		= this.facade.getStencilSets();
+-			var source 	= ss[ss.keys()[0]].source().split('stencilsets')[1];
++			var source 	= ss.get(ss.keys()[0]).source().split('stencilsets')[1];
+ 	
+ 			reqURI = '/backend/poem' + ORYX.CONFIG.ORYX_NEW_URL + "?stencilset=/stencilsets" + source ;		
+ 		}
+diff --git a/editor/client/scripts/Plugins/jpdlSupport.js b/editor/client/scripts/Plugins/jpdlSupport.js
+index 77a445a..e4be52a 100644
+--- a/editor/client/scripts/Plugins/jpdlSupport.js
++++ b/editor/client/scripts/Plugins/jpdlSupport.js
+@@ -384,7 +384,7 @@ ORYX.Plugins.JPDLSupport = ORYX.Plugins.AbstractPlugin.extend({
+ 
+ 	loadStencilSetExtension: function(stencilSetNamespace, stencilSetExtensionDefinition) {
+ 
+-		var stencilset = this.facade.getStencilSets()[stencilSetNamespace];
++		var stencilset = this.facade.getStencilSets().get(stencilSetNamespace);
+ 
+ 		if (stencilset) {
+ 
+diff --git a/editor/client/scripts/Plugins/propertywindow.js b/editor/client/scripts/Plugins/propertywindow.js
+index 4b21d89..67ccd49 100644
+--- a/editor/client/scripts/Plugins/propertywindow.js
++++ b/editor/client/scripts/Plugins/propertywindow.js
+@@ -55,7 +55,7 @@ ORYX.Plugins.PropertyWindow = {
+ 		this.properties = [];
+ 		
+ 		/* The currently selected shapes whos properties will shown */
+-		this.shapeSelection = new Hash();
++		this.shapeSelection = new Object();
+ 		this.shapeSelection.shapes = new Array();
+ 		this.shapeSelection.commonProperties = new Array();
+ 		this.shapeSelection.commonPropertiesValues = new Hash();
+@@ -240,7 +240,7 @@ ORYX.Plugins.PropertyWindow = {
+ 		
+ 		this.oldValues = new Hash();
+ 		this.shapeSelection.shapes.each(function(shape){
+-			this.oldValues[shape.getId()] = shape.properties[key];
++			this.oldValues.set(shape.getId(), shape.properties[key]);
+ 		}.bind(this)); 
+ 	},
+ 
+@@ -278,7 +278,7 @@ ORYX.Plugins.PropertyWindow = {
+ 			},
+ 			rollback: function(){
+ 				this.selectedElements.each(function(shape){
+-					shape.setProperty(this.key, this.oldValues[shape.getId()]);
++					shape.setProperty(this.key, this.oldValues.get(shape.getId()));
+ 				}.bind(this));
+ 				this.facade.setSelection(this.selectedElements);
+ 				this.facade.getCanvas().update();
+@@ -331,7 +331,7 @@ ORYX.Plugins.PropertyWindow = {
+ 	updateAfterInvalid : function(key) {
+ 		this.shapeSelection.shapes.each(function(shape) {
+ 			if(!shape.getStencil().property(key).readonly()) {
+-				shape.setProperty(key, this.oldValues[shape.getId()]);
++				shape.setProperty(key, this.oldValues.get(shape.getId()));
+ 				shape.update();
+ 			}
+ 		}.bind(this));
+@@ -388,8 +388,7 @@ ORYX.Plugins.PropertyWindow = {
+ 			
+ 			/* Set property value */
+ 			if(!emptyValue) {
+-				this.shapeSelection.commonPropertiesValues[key]
+-					= firstShape.properties[key];
++				this.shapeSelection.commonPropertiesValues.set(key, firstShape.properties[key]);
+ 			}
+ 		}.bind(this));
+ 	},
+@@ -401,7 +400,7 @@ ORYX.Plugins.PropertyWindow = {
+ 		var stencils = new Hash();
+ 		
+ 		this.shapeSelection.shapes.each(function(shape) {
+-			stencils[shape.getStencil().id()] = shape.getStencil();
++			stencils.set(shape.getStencil().id(), shape.getStencil());
+ 		})
+ 		return stencils;
+ 	},
+@@ -428,8 +427,8 @@ ORYX.Plugins.PropertyWindow = {
+ 			
+ 			/* put all properties of on stencil in a Hash */
+ 			firstStencil.properties().each(function(property){
+-				properties[property.namespace() + '-' + property.id() 
+-							+ '-' + property.type()] = property;
++				properties.set(property.namespace() + '-' + property.id() 
++							+ '-' + property.type(), property);
+ 			});
+ 			
+ 			/* Calculate intersection of properties. */
+@@ -437,10 +436,10 @@ ORYX.Plugins.PropertyWindow = {
+ 			comparingStencils.each(function(stencil){
+ 				var intersection = new Hash();
+ 				stencil.properties().each(function(property){
+-					if(properties[property.namespace() + '-' + property.id()
+-									+ '-' + property.type()]){
+-						intersection[property.namespace() + '-' + property.id()
+-										+ '-' + property.type()] = property;
++					if(properties.get(property.namespace() + '-' + property.id()
++									+ '-' + property.type()) != undefined){
++						intersection.set(property.namespace() + '-' + property.id()
++										+ '-' + property.type(), property);
+ 					}
+ 				});
+ 				properties = intersection;	
+@@ -494,7 +493,7 @@ ORYX.Plugins.PropertyWindow = {
+ 				// Get the property pair
+ 				var name		= pair.title();
+ 				var icons		= [];
+-				var attribute	= this.shapeSelection.commonPropertiesValues[key];
++				var attribute	= this.shapeSelection.commonPropertiesValues.get(key);
+ 				
+ 				var editorGrid = undefined;
+ 				var editorRenderer = null;
+@@ -913,7 +912,7 @@ Ext.extend(Ext.form.ComplexListField, Ext.form.TriggerField,  {
+ 		
+ 		for (var i = 0; i < items.length; i++) {
+ 			var id = items[i].id();
+-			initial[id] = items[i].value();
++			initial.set(id, items[i].value());
+ 		}
+ 		
+ 		var RecordTemplate = Ext.data.Record.create(recordType);
+diff --git a/editor/client/scripts/Plugins/shapemenu.js b/editor/client/scripts/Plugins/shapemenu.js
+index 7926b39..31b5606 100644
+--- a/editor/client/scripts/Plugins/shapemenu.js
++++ b/editor/client/scripts/Plugins/shapemenu.js
+@@ -298,7 +298,7 @@ ORYX.Plugins.ShapeMenuPlugin = {
+ 		if(elements.length != 1) return;
+ 
+ 		//TODO temporaere nutzung des stencilsets
+-		var sset = this.facade.getStencilSets()[elements[0].getStencil().namespace()];
++		var sset = this.facade.getStencilSets().get(elements[0].getStencil().namespace());
+ 
+ 		// Get all available edges
+ 		var edges = this.facade.getRules().outgoingEdgeStencils({canvas:this.facade.getCanvas(), sourceShape:elements[0]});
+@@ -411,7 +411,7 @@ ORYX.Plugins.ShapeMenuPlugin = {
+ 				delete option.backupOptions;
+ 			}
+ 
+-			var stencilSet = this.facade.getStencilSets()[option.namespace];
++			var stencilSet = this.facade.getStencilSets().get(option.namespace);
+ 
+ 			var stencil = stencilSet.stencil(option.type);
+ 
+@@ -564,7 +564,7 @@ ORYX.Plugins.ShapeMenuPlugin = {
+ 		option['position'] = pos;
+ 		option['connectedShape'] = this.currentShapes[0];
+ 		if(option['connectingType']) {
+-			var stencilset = this.facade.getStencilSets()[option.namespace];
++			var stencilset = this.facade.getStencilSets().get(option.namespace);
+ 			var containedStencil = stencilset.stencil(option.type);
+ 			var args = { sourceShape: this.currentShapes[0], targetStencil: containedStencil };
+ 			option['connectingType'] = this.facade.getRules().connectMorph(args).id();
+@@ -593,7 +593,7 @@ ORYX.Plugins.ShapeMenuPlugin = {
+ 	},
+ 
+ 	newShape: function(option, event) {
+-		var stencilset = this.facade.getStencilSets()[option.namespace];
++		var stencilset = this.facade.getStencilSets().get(option.namespace);
+ 		var containedStencil = stencilset.stencil(option.type);
+ 
+ 		if(this.facade.getRules().canContain({
+@@ -864,18 +864,18 @@ ORYX.Plugins.ShapeMenu = {
+ 	addButton: function(button) {
+ 		this.buttons.push(button);
+ 		// lazy grafting of the align containers
+-		if(!this.alignContainers[button.align]) {
+-			this.alignContainers[button.align] = ORYX.Editor.graft("http://www.w3.org/1999/xhtml", this.node,
+-					['div', {'class':button.align}]);
+-			this.node.appendChild(this.alignContainers[button.align]);
++		if(this.alignContainers.get(button.align) == undefined) {
++			this.alignContainers.set(button.align, ORYX.Editor.graft("http://www.w3.org/1999/xhtml", this.node,
++					['div', {'class':button.align}]));
++			this.node.appendChild(this.alignContainers.get(button.align));
+ 			
+ 			// add event listeners for hover effect
+ 			var onBubble = false;
+-			this.alignContainers[button.align].addEventListener(ORYX.CONFIG.EVENT_MOUSEOVER, this.hoverAlignContainer.bind(this, button.align), onBubble);
+-			this.alignContainers[button.align].addEventListener(ORYX.CONFIG.EVENT_MOUSEOUT, this.resetAlignContainer.bind(this, button.align), onBubble);
+-			this.alignContainers[button.align].addEventListener(ORYX.CONFIG.EVENT_MOUSEUP, this.hoverAlignContainer.bind(this, button.align), onBubble);
++			this.alignContainers.get(button.align).addEventListener(ORYX.CONFIG.EVENT_MOUSEOVER, this.hoverAlignContainer.bind(this, button.align), onBubble);
++			this.alignContainers.get(button.align).addEventListener(ORYX.CONFIG.EVENT_MOUSEOUT, this.resetAlignContainer.bind(this, button.align), onBubble);
++			this.alignContainers.get(button.align).addEventListener(ORYX.CONFIG.EVENT_MOUSEUP, this.hoverAlignContainer.bind(this, button.align), onBubble);
+ 		}
+-		this.alignContainers[button.align].appendChild(button.node);
++		this.alignContainers.get(button.align).appendChild(button.node);
+ 	},
+ 
+ 	deleteButton: function(button) {
+@@ -1073,7 +1073,7 @@ ORYX.Plugins.ShapeMenu = {
+ 	 * will be rendered in 2 rows.
+ 	 */
+ 	setNumberOfButtonsPerLevel: function(align, number) {
+-		this.numberOfButtonsPerLevel[align] = number;
++		this.numberOfButtonsPerLevel.set(align, number);
+ 	},
+ 	
+ 	/**
+@@ -1081,8 +1081,8 @@ ORYX.Plugins.ShapeMenu = {
+ 	 * Default value is 1
+ 	 */
+ 	getNumberOfButtonsPerLevel: function(align) {
+-		if(this.numberOfButtonsPerLevel[align])
+-			return Math.min(this.getButtons(align,0).length, this.numberOfButtonsPerLevel[align]);
++		if(this.numberOfButtonsPerLevel.get(align))
++			return Math.min(this.getButtons(align,0).length, this.numberOfButtonsPerLevel.get(align));
+ 		else
+ 			return 1;
+ 	}
+diff --git a/editor/client/scripts/Plugins/shaperepository.js b/editor/client/scripts/Plugins/shaperepository.js
+index 67d76b4..0a17d10 100644
+--- a/editor/client/scripts/Plugins/shaperepository.js
++++ b/editor/client/scripts/Plugins/shaperepository.js
+@@ -121,23 +121,23 @@ ORYX.Plugins.ShapeRepository = {
+ 				groups.each((function(group) {
+ 					
+ 					// If there is a new group
+-					if(!treeGroups[group]) {
++					if(treeGroups.get(group) == undefined) {
+ 						// Create a new group
+-						treeGroups[group] = new Ext.tree.TreeNode({
++						treeGroups.set(group, new Ext.tree.TreeNode({
+ 							text:group,					// Group-Name
+ 							allowDrag:false,
+         					allowDrop:false,            
+ 							iconCls:'headerShapeRepImg', // Css-Class for Icon
+ 				            cls:'headerShapeRepChild',  // CSS-Class for Stencil-Group
+-							singleClickExpand:true});
++							singleClickExpand:true}));
+ 						
+ 						// Add the Group to the ShapeRepository
+-						stencilSetNode.appendChild(treeGroups[group]);
+-						treeGroups[group].render();	
++						stencilSetNode.appendChild(treeGroups.get(group));
++						treeGroups.get(group).render();	
+ 					}
+ 					
+ 					// Create the Stencil-Tree-Node
+-					this.createStencilTreeNode(treeGroups[group], value);	
++					this.createStencilTreeNode(treeGroups.get(group), value);	
+ 					
+ 				}).bind(this));
+ 				
+@@ -320,7 +320,7 @@ ORYX.Plugins.ShapeRepository = {
+ 			// check containment rules
+ 			var option = Ext.dd.Registry.getHandle(target.DDM.currentTarget);
+ 
+-			var stencilSet = this.facade.getStencilSets()[option.namespace];
++			var stencilSet = this.facade.getStencilSets().get(option.namespace);
+ 
+ 			var stencil = stencilSet.stencil(option.type);
+ 
+diff --git a/editor/client/scripts/Plugins/toolbar.js b/editor/client/scripts/Plugins/toolbar.js
+index d6c8314..a6c201c 100644
+--- a/editor/client/scripts/Plugins/toolbar.js
++++ b/editor/client/scripts/Plugins/toolbar.js
+@@ -37,7 +37,7 @@ ORYX.Plugins.Toolbar = Clazz.extend({
+ 		this.groupIndex = new Hash();
+ 		ownPluginData.properties.each((function(value){
+ 			if(value.group && value.index != undefined) {
+-				this.groupIndex[value.group] = value.index
++				this.groupIndex.set(value.group, value.index);
+ 			}
+ 		}).bind(this));
+ 		
+@@ -70,7 +70,7 @@ ORYX.Plugins.Toolbar = Clazz.extend({
+ 	registryChanged: function(pluginsData) {
+         // Sort plugins by group and index
+ 		var newPlugs =  pluginsData.sortBy((function(value) {
+-			return ((this.groupIndex[value.group] != undefined ? this.groupIndex[value.group] : "" ) + value.group + "" + value.index).toLowerCase();
++			return (((this.groupIndex.index(value.group) != undefined) ? this.groupIndex.get(value.group) : "" ) + value.group + "" + value.index).toLowerCase();
+ 		}).bind(this));
+ 		var plugs = $A(newPlugs).findAll(function(value){
+ 										return !this.plugs.include( value )

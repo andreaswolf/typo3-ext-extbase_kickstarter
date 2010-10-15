@@ -1,0 +1,17 @@
+***************
+*** 384,390 ****
+  
+  	loadStencilSetExtension: function(stencilSetNamespace, stencilSetExtensionDefinition) {
+  
+- 		var stencilset = this.facade.getStencilSets()[stencilSetNamespace];
+  
+  		if (stencilset) {
+  
+--- 384,390 ----
+  
+  	loadStencilSetExtension: function(stencilSetNamespace, stencilSetExtensionDefinition) {
+  
++ 		var stencilset = this.facade.getStencilSets().get(stencilSetNamespace);
+  
+  		if (stencilset) {
+  

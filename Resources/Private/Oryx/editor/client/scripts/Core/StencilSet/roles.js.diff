@@ -1,0 +1,697 @@
+diff --git a/editor/client/scripts/Core/StencilSet/rules.js b/editor/client/scripts/Core/StencilSet/rules.js
+index d5e5c07..eed3b26 100644
+--- a/editor/client/scripts/Core/StencilSet/rules.js
++++ b/editor/client/scripts/Core/StencilSet/rules.js
+@@ -252,15 +252,15 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var cr = this._connectionRules;
+ 
+-			if (jsonRules.connectionRules) {
++			if (jsonRules.get('connectionRules')) {
+ 
+-				jsonRules.connectionRules.each((function(rules){
++				jsonRules.get('connectionRules').each((function(rules){
+ 
+ 					if (this._isRoleOfOtherNamespace(rules.role)) {
+ 
+-						if (!cr[rules.role]) {
++						if (cr.get(rules.role) == undefined) {
+ 
+-							cr[rules.role] = new Hash();
++							cr.set(rules.role, new Hash());
+ 
+ 						}
+ 
+@@ -268,9 +268,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					else {
+ 
+-						if (!cr[namespace + rules.role]) 
++						if (cr.get(namespace + rules.role) == undefined) 
+ 
+-							cr[namespace + rules.role] = new Hash();
++							cr.set(namespace + rules.role, new Hash());
+ 
+ 					}
+ 
+@@ -330,13 +330,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 						
+ 
+-						if (!cr[role][from]) 
++						if (cr.get(role).get(from) == undefined) 
+ 
+-							cr[role][from] = toRoles;
++							cr.get(role).set(from, toRoles);
+ 
+ 						else 
+ 
+-							cr[role][from] = cr[role][from].concat(toRoles);
++							cr.get(role).set(from, cr.get(role).get(from).concat(toRoles));
+ 
+ 						
+ 
+@@ -352,9 +352,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var cardr = this._cardinalityRules;
+ 
+-			if (jsonRules.cardinalityRules) {
++			if (jsonRules.get('cardinalityRules')) {
+ 
+-				jsonRules.cardinalityRules.each((function(rules){
++				jsonRules.get('cardinalityRules').each((function(rules){
+ 
+ 					var cardrKey;
+ 
+@@ -372,13 +372,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					
+ 
+-					if (!cardr[cardrKey]) {
++					if (cardr.get(cardrKey) == undefined) {
+ 
+-						cardr[cardrKey] = {};
++						cardr.set(cardrKey, {});
+ 
+ 						for (i in rules) {
+ 
+-							cardr[cardrKey][i] = rules[i];
++							cardr.get(cardrKey)[i] = rules[i]; // TODO check if this really works
+ 
+ 						}
+ 
+@@ -394,13 +394,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 							if (this._isRoleOfOtherNamespace(rule.role)) {
+ 
+-								oe[rule.role] = rule;
++								oe.set(rule.role, rule);
+ 
+ 							}
+ 
+ 							else {
+ 
+-								oe[namespace + rule.role] = rule;
++								oe.set(namespace + rule.role, rule);
+ 
+ 							}
+ 
+@@ -408,7 +408,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					cardr[cardrKey].outgoingEdges = oe;
++					cardr.get(cardrKey).outgoingEdges = oe;
+ 
+ 					var ie = new Hash();
+ 
+@@ -418,13 +418,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 							if (this._isRoleOfOtherNamespace(rule.role)) {
+ 
+-								ie[rule.role] = rule;
++								ie.set(rule.role, rule);
+ 
+ 							}
+ 
+ 							else {
+ 
+-								ie[namespace + rule.role] = rule;
++								ie.set(namespace + rule.role, rule);
+ 
+ 							}
+ 
+@@ -432,7 +432,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					cardr[cardrKey].incomingEdges = ie;
++					cardr.get(cardrKey).incomingEdges = ie;
+ 
+ 				}).bind(this));
+ 
+@@ -444,9 +444,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var conr = this._containmentRules;
+ 
+-			if (jsonRules.containmentRules) {
++			if (jsonRules.get('containmentRules')) {
+ 
+-				jsonRules.containmentRules.each((function(rules){
++				jsonRules.get('containmentRules').each((function(rules){
+ 
+ 					var conrKey;
+ 
+@@ -462,9 +462,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					if (!conr[conrKey]) {
++					if (conr.get(conrKey) == undefined) {
+ 
+-						conr[conrKey] = [];
++						conr.set(conrKey, []);
+ 
+ 					}
+ 
+@@ -472,13 +472,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 						if (this._isRoleOfOtherNamespace(containRole)) {
+ 
+-							conr[conrKey].push(containRole);
++							conr.get(conrKey).push(containRole);
+ 
+ 						}
+ 
+ 						else {
+ 
+-							conr[conrKey].push(namespace + containRole);
++							conr.get(conrKey).push(namespace + containRole);
+ 
+ 						}
+ 
+@@ -494,9 +494,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var morphr = this._morphingRules;
+ 
+-			if (jsonRules.morphingRules) {
++			if (jsonRules.get('morphingRules')) {
+ 
+-				jsonRules.morphingRules.each((function(rules){
++				jsonRules.get('morphingRules').each((function(rules){
+ 
+ 					var morphrKey;
+ 
+@@ -512,9 +512,9 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					if (!morphr[morphrKey]) {
++					if (morphr.get(morphrKey) == undefined) {
+ 
+-						morphr[morphrKey] = [];
++						morphr.set(morphrKey, []);
+ 
+ 					}
+ 
+@@ -526,7 +526,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					rules.baseMorphs.each((function(baseMorphStencilId){
+ 
+-						morphr[morphrKey].push(this._getStencilById(namespace + baseMorphStencilId));
++						morphr.get(morphrKey).push(this._getStencilById(namespace + baseMorphStencilId));
+ 
+ 					}).bind(this));
+ 
+@@ -540,7 +540,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			var layoutRules = this._layoutRules;
+ 
+-			if (jsonRules.layoutRules) {
++			if (jsonRules.get('layoutRules')) {
+ 
+ 				
+ 
+@@ -564,7 +564,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-				jsonRules.layoutRules.each(function(rules){
++				jsonRules.get('layoutRules').each(function(rules){
+ 
+ 					var layoutKey;
+ 
+@@ -580,33 +580,33 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					}
+ 
+-					if (!layoutRules[layoutKey]) {
++					if (layoutRules.get(layoutKey) == undefined) {
+ 
+-						layoutRules[layoutKey] = {};
++						layoutRules.set(layoutKey, {});
+ 
+ 					}
+ 
+ 					if (rules["in"]){
+ 
+-						layoutRules[layoutKey]["in"] = getDirections(rules["in"]);
++						layoutRules.get(layoutKey)["in"] = getDirections(rules["in"]);
+ 
+ 					}
+ 
+ 					if (rules["ins"]){
+ 
+-						layoutRules[layoutKey]["ins"] = (rules["ins"]||[]).map(function(e){ return getDirections(e) })
++						layoutRules.get(layoutKey)["ins"] = (rules["ins"]||[]).map(function(e){ return getDirections(e) })
+ 
+ 					}
+ 
+ 					if (rules["out"]) {
+ 
+-						layoutRules[layoutKey]["out"] = getDirections(rules["out"]);
++						layoutRules.get(layoutKey)["out"] = getDirections(rules["out"]);
+ 
+ 					}
+ 
+ 					if (rules["outs"]){
+ 
+-						layoutRules[layoutKey]["outs"] = (rules["outs"]||[]).map(function(e){ return getDirections(e) })
++						layoutRules.get(layoutKey)["outs"] = (rules["outs"]||[]).map(function(e){ return getDirections(e) })
+ 
+ 					}
+ 
+@@ -640,7 +640,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		if (args.sourceStencil && args.targetStencil) {
+ 
+-			var source = this._cachedConnectSET[args.sourceStencil.id()];
++			var source = this._cachedConnectSET.get(args.sourceStencil.id());
+ 
+ 			
+ 
+@@ -648,13 +648,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				source = new Hash();
+ 
+-				this._cachedConnectSET[args.sourceStencil.id()] = source;
++				this._cachedConnectSET.set(args.sourceStencil.id(), source);
+ 
+ 			}
+ 
+ 			
+ 
+-			var edge = source[args.edgeStencil.id()];
++			var edge = source.get(args.edgeStencil.id());
+ 
+ 			
+ 
+@@ -662,19 +662,19 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				edge = new Hash();
+ 
+-				source[args.edgeStencil.id()] = edge;
++				source.set(args.edgeStencil.id(), edge);
+ 
+ 			}
+ 
+ 			
+ 
+-			edge[args.targetStencil.id()] = result;
++			edge.set(args.targetStencil.id(), result);
+ 
+ 			
+ 
+ 		} else if (args.sourceStencil) {
+ 
+-			var source = this._cachedConnectSE[args.sourceStencil.id()];
++			var source = this._cachedConnectSE.get(args.sourceStencil.id());
+ 
+ 			
+ 
+@@ -682,19 +682,19 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				source = new Hash();
+ 
+-				this._cachedConnectSE[args.sourceStencil.id()] = source;
++				this._cachedConnectSE.set(args.sourceStencil.id(), source);
+ 
+ 			}
+ 
+ 			
+ 
+-			source[args.edgeStencil.id()] = result;
++			source.set(args.edgeStencil.id(), result);
+ 
+ 
+ 
+ 		} else {
+ 
+-			var target = this._cachedConnectTE[args.targetStencil.id()];
++			var target = this._cachedConnectTE.get(args.targetStencil.id());
+ 
+ 			
+ 
+@@ -702,13 +702,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				target = new Hash();
+ 
+-				this._cachedConnectTE[args.targetStencil.id()] = target;
++				this._cachedConnectTE.set(args.targetStencil.id(), target);
+ 
+ 			}
+ 
+ 			
+ 
+-			target[args.edgeStencil.id()] = result;
++			target.set(args.edgeStencil.id(), result);
+ 
+ 		}
+ 
+@@ -726,7 +726,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		if(args.sourceStencil) {
+ 
+-			var source = this._cachedCardSE[args.sourceStencil.id()]
++			var source = this._cachedCardSE.get(args.sourceStencil.id())
+ 
+ 			
+ 
+@@ -734,7 +734,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				source = new Hash();
+ 
+-				this._cachedCardSE[args.sourceStencil.id()] = source;
++				this._cachedCardSE.set(args.sourceStencil.id(), source);
+ 
+ 			}
+ 
+@@ -748,7 +748,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-			source[args.edgeStencil.id()] = max;
++			source.set(args.edgeStencil.id(), max);
+ 
+ 		}	
+ 
+@@ -756,7 +756,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		if(args.targetStencil) {
+ 
+-			var target = this._cachedCardTE[args.targetStencil.id()]
++			var target = this._cachedCardTE.get(args.targetStencil.id())
+ 
+ 			
+ 
+@@ -764,7 +764,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				target = new Hash();
+ 
+-				this._cachedCardTE[args.targetStencil.id()] = target;
++				this._cachedCardTE.set(args.targetStencil.id(), target);
+ 
+ 			}
+ 
+@@ -778,7 +778,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-			target[args.edgeStencil.id()] = max;
++			target.set(args.edgeStencil.id(), max);
+ 
+ 		}
+ 
+@@ -802,7 +802,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		
+ 
+-		var children = this._cachedContainPC[args.containingStencil.id()];
++		var children = this._cachedContainPC.get(args.containingStencil.id());
+ 
+ 		
+ 
+@@ -810,13 +810,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			children = new Hash();
+ 
+-			this._cachedContainPC[args.containingStencil.id()] = children;
++			this._cachedContainPC.set(args.containingStencil.id(), children);
+ 
+ 		}
+ 
+ 		
+ 
+-		children[args.containedStencil.id()] = result;
++		children.set(args.containedStencil.id(), result);
+ 
+ 		
+ 
+@@ -838,7 +838,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		
+ 
+-		var morphs = this._cachedMorphRS[role];
++		var morphs = this._cachedMorphRS.get(role);
+ 
+ 		
+ 
+@@ -860,7 +860,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			
+ 
+-			this._cachedMorphRS[role] = morphs;
++			this._cachedMorphRS.set(role, morphs);
+ 
+ 		}
+ 
+@@ -1272,7 +1272,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		if(args.sourceStencil && args.targetStencil) {
+ 
+-			var source = this._cachedConnectSET[args.sourceStencil.id()];
++			var source = this._cachedConnectSET.get(args.sourceStencil.id());
+ 
+ 			
+ 
+@@ -1282,7 +1282,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			else {
+ 
+-				var edge = source[args.edgeStencil.id()];
++				var edge = source.get(args.edgeStencil.id());
+ 
+ 
+ 
+@@ -1292,7 +1292,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				else {	
+ 
+-					var target = edge[args.targetStencil.id()];
++					var target = edge.get(args.targetStencil.id());
+ 
+ 
+ 
+@@ -1310,7 +1310,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		} else if (args.sourceStencil) {	
+ 
+-			var source = this._cachedConnectSE[args.sourceStencil.id()];
++			var source = this._cachedConnectSE.get(args.sourceStencil.id());
+ 
+ 			
+ 
+@@ -1320,7 +1320,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			else {
+ 
+-				var edge = source[args.edgeStencil.id()];
++				var edge = source.get(args.edgeStencil.id());
+ 
+ 					
+ 
+@@ -1336,7 +1336,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		} else { // args.targetStencil
+ 
+-			var target = this._cachedConnectTE[args.targetStencil.id()];
++			var target = this._cachedConnectTE.get(args.targetStencil.id());
+ 
+ 			
+ 
+@@ -1346,7 +1346,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			else {
+ 
+-				var edge = target[args.edgeStencil.id()];
++				var edge = target.get(args.edgeStencil.id());
+ 
+ 					
+ 
+@@ -1370,7 +1370,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			if(args.sourceShape) {
+ 
+-				var source = this._cachedCardSE[args.sourceStencil.id()];
++				var source = this._cachedCardSE.get(args.sourceStencil.id());
+ 
+ 				
+ 
+@@ -1378,13 +1378,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					this._cacheCard(args);
+ 
+-					source = this._cachedCardSE[args.sourceStencil.id()];
++					source = this._cachedCardSE.get(args.sourceStencil.id());
+ 
+ 				}
+ 
+ 				
+ 
+-				var max = source[args.edgeStencil.id()];
++				var max = source.get(args.edgeStencil.id());
+ 
+ 				
+ 
+@@ -1396,7 +1396,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-				max = source[args.edgeStencil.id()];
++				max = source.get(args.edgeStencil.id());
+ 
+ 				
+ 
+@@ -1428,7 +1428,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			if (args.targetShape) {
+ 
+-				var target = this._cachedCardTE[args.targetStencil.id()];
++				var target = this._cachedCardTE.get(args.targetStencil.id());
+ 
+ 				
+ 
+@@ -1436,13 +1436,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 					this._cacheCard(args);
+ 
+-					target = this._cachedCardTE[args.targetStencil.id()];
++					target = this._cachedCardTE.get(args.targetStencil.id());
+ 
+ 				}
+ 
+ 				
+ 
+-				var max = target[args.edgeStencil.id()];
++				var max = target.get(args.edgeStencil.id());
+ 
+ 				
+ 
+@@ -1454,7 +1454,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				
+ 
+-				max = target[args.edgeStencil.id()];
++				max = target.get(args.edgeStencil.id());
+ 
+ 				
+ 
+@@ -1588,7 +1588,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				resultCR = args.sourceStencil.roles().any(function(sourceRole) {
+ 
+-					var targetRoles = edgeRules[sourceRole];
++					var targetRoles = edgeRules.get(sourceRole);
+ 
+ 
+ 
+@@ -1706,7 +1706,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		
+ 
+-		var parent = this._cachedContainPC[args.containingStencil.id()];
++		var parent = this._cachedContainPC.get(args.containingStencil.id());
+ 
+ 		
+ 
+@@ -1716,7 +1716,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		else {
+ 
+-			childValues = parent[args.containedStencil.id()];
++			childValues = parent.get(args.containedStencil.id());
+ 
+ 			
+ 
+@@ -1840,7 +1840,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		result = args.containingStencil.roles().any((function(role) {
+ 
+-			var roles = this._containmentRules[role];
++			var roles = this._containmentRules.get(role);
+ 
+ 			if(roles) {
+ 
+@@ -2208,13 +2208,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 			// check if there are layout information
+ 
+-			if (this._layoutRules[role]){
++			if (this._layoutRules.get(role) != undefined){
+ 
+ 				// if so, parse those information to the 'layout' variable
+ 
+-				parseValues(this._layoutRules[role], "in");
++				parseValues(this._layoutRules.get(role), "in");
+ 
+-				parseValues(this._layoutRules[role], "out");
++				parseValues(this._layoutRules.get(role), "out");
+ 
+ 			}
+ 
+@@ -2384,7 +2384,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		child.roles().each((function(role) {
+ 
+-			var cardRule = this._cardinalityRules[role];
++			var cardRule = this._cardinalityRules.get(role);
+ 
+ 			if(cardRule && cardRule.maximumOccurrence) {
+ 
+@@ -2448,7 +2448,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		args.sourceStencil.roles().each((function(role) {
+ 
+-			var cardRule = this._cardinalityRules[role];
++			var cardRule = this._cardinalityRules.get(role);
+ 
+ 
+ 
+@@ -2456,7 +2456,7 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 				args.edgeStencil.roles().each(function(edgeRole) {
+ 
+-					var oe = cardRule.outgoingEdges[edgeRole];
++					var oe = cardRule.outgoingEdges.get(edgeRole);
+ 
+ 
+ 
+@@ -2524,13 +2524,13 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		args.targetStencil.roles().each((function(role) {
+ 
+-			var cardRule = this._cardinalityRules[role];
++			var cardRule = this._cardinalityRules.get(role);
+ 
+ 			if(cardRule && cardRule.incomingEdges) {
+ 
+ 				args.edgeStencil.roles().each(function(edgeRole) {
+ 
+-					var ie = cardRule.incomingEdges[edgeRole];
++					var ie = cardRule.incomingEdges.get(edgeRole);
+ 
+ 					if(ie && ie.maximum) {
+ 
+@@ -2582,17 +2582,17 @@ ORYX.Core.StencilSet.Rules = {
+ 
+ 		edgeStencil.roles().each((function(role) {
+ 
+-			if(this._connectionRules[role]) {
++			if(this._connectionRules.get(role) != undefined) {
+ 
+-				this._connectionRules[role].each(function(cr) {
++				this._connectionRules.get(role).each(function(cr) {
+ 
+-					if(edgeRules[cr.key]) {
++					if(edgeRules.get(cr.key) != undefined) {
+ 
+-						edgeRules[cr.key] = edgeRules[cr.key].concat(cr.value);
++						edgeRules.set(cr.key, edgeRules.get(cr.key).concat(cr.value));
+ 
+ 					} else {
+ 
+-						edgeRules[cr.key] = cr.value;
++						edgeRules.set(cr.key, cr.value);
+ 
+ 					}
+ 

@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="Oryx Main Build Script">
+    <!-- Load additional properties -->
+    <property file="build.properties"/>
+	<property name="build-dir" value="build" />
+	<property name="target-dir" value="dist" />
+    
+    <!-- Import ANT build scripts of sub projects -->
+    <import file="editor/build.xml"/>
+    
+    
+    <target name="clean-all" depends="clean-editor">
+        <!-- the depencies are somewhat redundant at the moment, but also future-proof -->
+    	<delete dir="${build-dir}"/>
+		<delete dir="${target-dir}"/>
+	</target>
+    
+    
+    <!-- DEPLOYMENT TARGETS (NO BUILD OF PROJECTS!) -->
+    
+    <target name="deploy-stencilsets">
+        <copy todir='${deploymentdir}/oryx/stencilsets'>
+            <fileset dir="${editor-src-root}/data/stencilsets"/>
+        </copy>
+        <echo>
+            Copied stencilsets into deployment destination
+        </echo>
+    </target>
+</project>
